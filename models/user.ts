@@ -1,4 +1,4 @@
-import {Schema, model} from "mongoose";
+import {Schema, Types, model} from "mongoose";
 import { User } from "@/types";
 
 const userSchema = new Schema<User>({
@@ -21,7 +21,7 @@ const userSchema = new Schema<User>({
   profilePic: {
     type: String,
     required: false,
-    default: null
+    default: null,
   },
   occupation: {
     type: String,
@@ -32,6 +32,20 @@ const userSchema = new Schema<User>({
     type: String,
     required: true,
   },
+  followers: [
+    {
+      type: Types.ObjectId,
+      ref: "User",
+      default: []
+    },
+  ],
+  following: [
+    {
+      type: Types.ObjectId,
+      ref: "User",
+      default: []
+    },
+  ],
 });
 
 

@@ -8,6 +8,8 @@ export interface User {
   profilePic?: string | null;
   occupation: string;
   password: string;
+  followers: User[];
+  following: User[];
 }
 
 export interface Post{

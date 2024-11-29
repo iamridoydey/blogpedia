@@ -32,6 +32,26 @@ export default async function handler(
         const pushQuery: any = {};
 
         for (const key in body) {
+          if (key === "email") {
+            // Check if email already exists in another user
+            const isExistEmail = await UserModel.findOne({ email: body[key] });
+            if (isExistEmail && isExistEmail._id.toString() !== id) {
+              return res.status(409).json({ message: "Email already exists" });
+            }
+          }
+
+          if (key === "username") {
+            // Check if username already exists in another user
+            const isExistUsername = await UserModel.findOne({
+              username: body[key],
+            });
+            if (isExistUsername && isExistUsername._id.toString() !== id) {
+              return res
+                .status(409)
+                .json({ message: "Username already exists" });
+            }
+          }
+
           if (["followers", "following"].includes(key)) {
             if (!pushQuery.$push) pushQuery.$push = {};
             pushQuery.$push[key] = body[key];
@@ -50,15 +70,17 @@ export default async function handler(
         );
 
         return res.status(200).json(updatedUser);
-      } catch (error) {
+      } catch (error: any) {
         return res
           .status(500)
-          .json({ message: `Error updating user: ${error}` });
+          .json({ message: `Error updating user: ${error.message}` });
       }
+
 
     case "DELETE":
       await UserModel.findByIdAndDelete(id);
-
+      break;
+      
     default:
       return res.status(405).json({ message: `Method ${method} not allowed` });
   }

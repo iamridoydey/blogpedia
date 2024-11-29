@@ -9,6 +9,12 @@ dbConnect()
 
 
 export default async function createUser(req: NextApiRequest, res: NextApiResponse){
+  if (req.method !== "POST") {
+    return res
+      .status(405)
+      .json({ message: `Method ${req.method} not allowed` });
+  }
+  
   const body = req.body;
   
   if (!body) res.status(404).json({message: "Provide all data"});

@@ -11,6 +11,7 @@ export default async function handler(
   const { method } = req;
   const { id } = req.query;
   const body = req.body;
+
   let user = null;
 
   try {
@@ -76,11 +77,16 @@ export default async function handler(
           .json({ message: `Error updating user: ${error.message}` });
       }
 
-
     case "DELETE":
-      await UserModel.findByIdAndDelete(id);
-      break;
-      
+      try {
+        await UserModel.findByIdAndDelete(id);
+        return res.status(204).end(); // 204 No Content
+      } catch (error: any) {
+        return res
+          .status(500)
+          .json({ message: `Error deleting user: ${error.message}` });
+      }
+
     default:
       return res.status(405).json({ message: `Method ${method} not allowed` });
   }

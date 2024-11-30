@@ -1,54 +1,72 @@
-import { NextApiRequest, NextApiResponse } from "next";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { NextRequest, NextResponse } from "next/server";
 import CommentModel from "@/models/comment";
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
+export async function PATCH(
+  req: NextRequest,
+  params: any 
 ) {
-  const { content } = req.body;
-  const { id } = req.query; // ID from dynamic route
-  const method = req.method;
+  const { id } = params;
+  const body = await req.json();
+  const { content } = body;
 
-  if (!id) {
-    return res.status(400).json({ message: "Comment ID is required" });
+  if (!content) {
+    return NextResponse.json(
+      { message: "Content is required" },
+      { status: 400 }
+    );
   }
 
   try {
-    switch (method) {
-      case "PATCH":
-        if (!content) {
-          return res.status(400).json({ message: "Content is required" });
-        }
+    const updatedComment = await CommentModel.findByIdAndUpdate(
+      id,
+      { content },
+      { new: true }
+    );
 
-        const updatedComment = await CommentModel.findByIdAndUpdate(
-          id,
-          { content },
-          { new: true }
-        );
-
-        if (!updatedComment) {
-          return res.status(404).json({ message: "Comment not found" });
-        }
-
-        return res.status(200).json(updatedComment);
-
-      case "DELETE":
-        const deletedComment = await CommentModel.findByIdAndDelete(id);
-
-        if (!deletedComment) {
-          return res.status(404).json({ message: "Comment not found" });
-        }
-
-        return res
-          .status(200)
-          .json({ message: "Successfully deleted the comment" });
-
-      default:
-        return res
-          .status(405)
-          .json({ message: `Method ${method} not allowed` });
+    if (!updatedComment) {
+      return NextResponse.json(
+        { message: "Comment not found" },
+        { status: 404 }
+      );
     }
+
+    return NextResponse.json(updatedComment, { status: 200 });
   } catch (error: any) {
-    return res.status(500).json({ message: `Server error: ${error.message}` });
+    return NextResponse.json(
+      { message: `Server error: ${error.message}` },
+      { status: 500 }
+    );
   }
+}
+
+export async function DELETE(
+  params:any
+) {
+  const { id } = params;
+
+  try {
+    const deletedComment = await CommentModel.findByIdAndDelete(id);
+
+    if (!deletedComment) {
+      return NextResponse.json(
+        { message: "Comment not found" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json(
+      { message: "Successfully deleted the comment" },
+      { status: 200 }
+    );
+  } catch (error: any) {
+    return NextResponse.json(
+      { message: `Server error: ${error.message}` },
+      { status: 500 }
+    );
+  }
+}
+
+export function OPTIONS() {
+  return NextResponse.json(null, { status: 204 });
 }

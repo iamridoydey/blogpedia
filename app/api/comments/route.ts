@@ -1,47 +1,40 @@
-import { NextApiRequest, NextApiResponse } from "next";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
 import CommentModel from "@/models/comment";
-import { getSession } from "next-auth/react";
+import { authOptions } from "@/lib/authOptions";
 
-export default async function createComment(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
-  const method = req.method;
-
-  if (method !== "POST") {
-    return res.status(405).json({ message: `Method ${method} not allowed` });
-  }
-
-  const { content, postId } = req.body;
-
-  // Validate input
-  if (!content || !postId) {
-    return res
-      .status(400)
-      .json({ message: "Content and Post ID are required" });
-  }
-
+export async function POST(req: NextRequest) {
   try {
-    // Check the session
-    const session = await getSession({ req });
+    const session = await getServerSession(authOptions);
 
     if (!session || !session.user) {
-      return res.status(401).json({ message: "Unauthorized" });
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
+    const body = await req.json();
+    const { content, postId } = body;
+
+    if (!content || !postId) {
+      return NextResponse.json(
+        { message: "Content and Post ID are required" },
+        { status: 400 }
+      );
     }
 
     const newComment = new CommentModel({
       content,
-      commentBy: session.user._id,
+      commentBy: session.user.id, // Use appropriate ID field
       postId,
     });
 
-    // Save the new comment
     const comment = await newComment.save();
 
-    return res.status(201).json(comment);
+    return NextResponse.json(comment, { status: 201 });
   } catch (error: any) {
-    return res
-      .status(500)
-      .json({ message: `Error creating comment: ${error.message}` });
+    return NextResponse.json(
+      { message: `Error creating comment: ${error.message}` },
+      { status: 500 }
+    );
   }
 }

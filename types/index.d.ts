@@ -5,11 +5,11 @@ export interface User {
   lastname: string;
   email: string;
   username: string;
-  profilePic?: string | null;
+  profilePic?: string;
   occupation: string;
   password: string;
-  followers: User[];
-  following: User[];
+  followers: Types.ObjectId[];
+  following: Types.ObjectId[];
 }
 
 export interface Post{

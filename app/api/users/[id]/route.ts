@@ -1,93 +1,108 @@
-import { NextApiRequest, NextApiResponse } from "next";
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import dbConnect from "@/lib/db";
 import UserModel from "@/models/user";
+import { NextRequest, NextResponse } from "next/server";
 
 dbConnect();
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
-  const { method } = req;
-  const { id } = req.query;
-  const body = req.body;
-
-  let user = null;
+export async function GET(req: NextRequest, { params }: any) {
+  const { id } = params;
 
   try {
-    if (id) {
-      user = await UserModel.findById(id);
-      if (!user) return res.status(404).json({ message: "User not found" });
+    const user = await UserModel.findById(id);
+    if (!user) {
+      return NextResponse.json({ message: "User not found" }, { status: 404 });
     }
-  } catch (err: unknown) {
-    return res.status(500).json({ message: `Error fetching user: ${err}` });
+    return NextResponse.json(user, { status: 200 });
+  } catch (error: any) {
+    return NextResponse.json(
+      { message: `Error fetching user: ${error.message}` },
+      { status: 500 }
+    );
   }
+}
 
-  switch (method) {
-    case "GET":
-      return res.status(200).json(user);
+export async function PATCH(req: NextRequest, { params }: any) {
+  const { id } = params;
+  const body = await req.json();
 
-    case "PATCH":
-      try {
-        const updateQuery: any = {};
-        const pushQuery: any = {};
+  try {
+    const updateQuery: any = {};
+    const pushQuery: any = {};
 
-        for (const key in body) {
-          if (key === "email") {
-            // Check if email already exists in another user
-            const isExistEmail = await UserModel.findOne({ email: body[key] });
-            if (isExistEmail && isExistEmail._id.toString() !== id) {
-              return res.status(409).json({ message: "Email already exists" });
-            }
-          }
-
-          if (key === "username") {
-            // Check if username already exists in another user
-            const isExistUsername = await UserModel.findOne({
-              username: body[key],
-            });
-            if (isExistUsername && isExistUsername._id.toString() !== id) {
-              return res
-                .status(409)
-                .json({ message: "Username already exists" });
-            }
-          }
-
-          if (["followers", "following"].includes(key)) {
-            if (!pushQuery.$push) pushQuery.$push = {};
-            pushQuery.$push[key] = body[key];
-          } else {
-            updateQuery[key] = body[key];
-          }
+    for (const key in body) {
+      if (key === "email") {
+        const isExistEmail = await UserModel.findOne({ email: body[key] });
+        if (isExistEmail && isExistEmail._id.toString() !== id) {
+          return NextResponse.json(
+            { message: "Email already exists" },
+            { status: 409 }
+          );
         }
-
-        const updatedUser = await UserModel.findByIdAndUpdate(
-          id,
-          {
-            ...updateQuery,
-            ...pushQuery,
-          },
-          { new: true }
-        );
-
-        return res.status(200).json(updatedUser);
-      } catch (error: any) {
-        return res
-          .status(500)
-          .json({ message: `Error updating user: ${error.message}` });
       }
 
-    case "DELETE":
-      try {
-        await UserModel.findByIdAndDelete(id);
-        return res.status(204).end(); // 204 No Content
-      } catch (error: any) {
-        return res
-          .status(500)
-          .json({ message: `Error deleting user: ${error.message}` });
+      if (key === "username") {
+        const isExistUsername = await UserModel.findOne({
+          username: body[key],
+        });
+        if (isExistUsername && isExistUsername._id.toString() !== id) {
+          return NextResponse.json(
+            { message: "Username already exists" },
+            { status: 409 }
+          );
+        }
       }
 
-    default:
-      return res.status(405).json({ message: `Method ${method} not allowed` });
+      if (["followers", "following"].includes(key)) {
+        if (!pushQuery.$push) pushQuery.$push = {};
+        pushQuery.$push[key] = body[key];
+      } else {
+        updateQuery[key] = body[key];
+      }
+    }
+
+    const updatedUser = await UserModel.findByIdAndUpdate(
+      id,
+      {
+        ...updateQuery,
+        ...pushQuery,
+      },
+      { new: true }
+    );
+
+    return NextResponse.json(updatedUser, { status: 200 });
+  } catch (error: any) {
+    return NextResponse.json(
+      { message: `Error updating user: ${error.message}` },
+      { status: 500 }
+    );
   }
+}
+
+export async function DELETE(req: NextRequest, { params }: any) {
+  const { id } = params;
+
+  try {
+    // Delete the user by ID
+    const deletedUser = await UserModel.findByIdAndDelete(id);
+
+    // If no user is found and deleted, return a 404 status
+    if (!deletedUser) {
+      return NextResponse.json({ message: "User not found" }, { status: 404 });
+    }
+
+    // Return a 204 status for successful deletion without a response body
+    return NextResponse.json({ message: "Successfully Deleted The User"}, { status: 200 });
+  } catch (error: any) {
+    // Catch any error and return a 500 status with an error message
+    return NextResponse.json(
+      { message: `Error deleting user: ${error.message}` },
+      { status: 500 }
+    );
+  }
+}
+
+
+export async function OPTIONS() {
+  return NextResponse.json({ message: "Method not allowed" }, { status: 405 });
 }

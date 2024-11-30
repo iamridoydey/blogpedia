@@ -1,37 +1,37 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import UserModel from "@/models/user";
-import { NextApiRequest, NextApiResponse } from "next";
 import dbConnect from "@/lib/db";
 import bcrypt from "bcryptjs";
+import { NextRequest, NextResponse } from "next/server";
 
+// Connect to the database
+dbConnect();
 
-// Connect database
-dbConnect()
+// Handle POST request to create a new user
+export async function POST(req: NextRequest) {
+  const { firstname, lastname, username, email, password } = await req.json();
 
-
-export default async function createUser(req: NextApiRequest, res: NextApiResponse){
-  if (req.method !== "POST") {
-    return res
-      .status(405)
-      .json({ message: `Method ${req.method} not allowed` });
+  // Check if required fields are missing
+  if (!firstname || !lastname || !email || !username || !password) {
+    return NextResponse.json(
+      { message: "All fields are required" },
+      { status: 400 }
+    );
   }
-  
-  const body = req.body;
-  
-  if (!body) res.status(404).json({message: "Provide all data"});
 
-  try{
-    const {firstname, lastname, username, email, password} = body;
-
-    // Check if any required fields are missing
-    if (!firstname || !lastname || !email || !username || !password) {
-      return res.status(400).json({ message: "All fields are required" });
+  try {
+    // Check if the email is already taken
+    const existingUser = await UserModel.findOne({ email });
+    if (existingUser) {
+      return NextResponse.json(
+        { message: "Email already registered" },
+        { status: 400 }
+      );
     }
 
-
     // Hash the password using bcrypt
-    const salt = await bcrypt.genSalt(10); // Generate a salt with 10 rounds of salting
-    const hashedPassword = await bcrypt.hash(password, salt); // Hash the password with the salt
-
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
 
     // Create a new user
     const newUser = new UserModel({
@@ -41,18 +41,33 @@ export default async function createUser(req: NextApiRequest, res: NextApiRespon
       email,
       password: hashedPassword,
       occupation: "Developer",
-      profilePic: null,
+      profilePic: "",
       followers: [],
-      following: []
-    })
+      following: [],
+    });
 
-
-    // Save the user
+    // Save the user to the database
     const savedUser = await newUser.save();
 
-    // return the saved user
-    return res.status(201).json(savedUser);
-  } catch(err: any){
-    return res.status(500).json({message: `Error Creating User: ${err.message}`});
+    // Return the saved user
+    return NextResponse.json(savedUser, { status: 201 });
+  } catch (err: any) {
+    return NextResponse.json(
+      { message: `Error Creating User: ${err.message}` },
+      { status: 500 }
+    );
+  }
+}
+
+// Get all users
+export async function GET() {
+  try {
+    const allUser = await UserModel.find({});
+    return NextResponse.json(allUser, { status: 200 });
+  } catch (error: any) {
+    return NextResponse.json(
+      { message: `Error Getting User: ${error.message}` },
+      { status: 500 }
+    );
   }
 }

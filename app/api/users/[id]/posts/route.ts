@@ -1,34 +1,39 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import PostModel from "@/models/post";
-import { NextApiRequest, NextApiResponse } from "next";
+import { NextRequest, NextResponse } from "next/server";
 
-export default async function postComments(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
-  const method = req.method;
-  const { id } = req.query;
+export async function GET(req: NextRequest, { params }: any) {
+  const { id } = params;
 
-  if (method === "GET") {
-    if (!id || typeof id !== "string") {
-      return res.status(400).json({ message: "Invalid or missing user ID" });
-    }
-
-    try {
-      const posts = await PostModel.find({ userId: id });
-
-      if (!posts.length) {
-        return res
-          .status(404)
-          .json({ message: "No posts found for this user" });
-      }
-
-      return res.status(200).json(posts);
-    } catch (error: any) {
-      return res
-        .status(500)
-        .json({ message: `Error getting posts: ${error.message}` });
-    }
-  } else {
-    return res.status(405).json({ message: `Method ${method} not allowed` });
+  if (!id || typeof id !== "string") {
+    return NextResponse.json(
+      { message: "Invalid or missing user ID" },
+      { status: 400 }
+    );
   }
+
+  try {
+    const posts = await PostModel.find({ userId: id });
+
+    if (!posts.length) {
+      return NextResponse.json(
+        { message: "No posts found for this user" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json(posts, { status: 200 });
+  } catch (error: any) {
+    return NextResponse.json(
+      { message: `Error getting posts: ${error.message}` },
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST() {
+  return NextResponse.json(
+    { message: "Method POST not allowed" },
+    { status: 405 }
+  );
 }

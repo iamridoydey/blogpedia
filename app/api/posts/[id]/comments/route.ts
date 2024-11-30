@@ -1,34 +1,38 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { NextRequest, NextResponse } from "next/server";
 import CommentModel from "@/models/comment";
-import { NextApiRequest, NextApiResponse } from "next";
+import { Types } from "mongoose";
 
-export default async function postComments(
-  req: NextApiRequest,
-  res: NextApiResponse
+export async function GET(
+  req: NextRequest,
+  {params}: any
 ) {
-  const method = req.method;
-  const { id } = req.query;
+  const { id } = params;
 
-  if (method === "GET") {
-    if (!id || typeof id !== "string") {
-      return res.status(400).json({ message: "Invalid or missing post ID" });
+  if (!id || !Types.ObjectId.isValid(id)) {
+    return NextResponse.json(
+      { message: "Invalid or missing post ID" },
+      { status: 400 }
+    );
+  }
+
+  try {
+    const comments = await CommentModel.find({
+      postId: new Types.ObjectId(id),
+    });
+
+    if (!comments.length) {
+      return NextResponse.json(
+        { message: "No comments found for this post" },
+        { status: 404 }
+      );
     }
 
-    try {
-      const comments = await CommentModel.find({ postId: id });
-
-      if (!comments.length) {
-        return res
-          .status(404)
-          .json({ message: "No comments found for this post" });
-      }
-
-      return res.status(200).json(comments);
-    } catch (error: any) {
-      return res
-        .status(500)
-        .json({ message: `Error fetching comments: ${error.message}` });
-    }
-  } else {
-    return res.status(405).json({ message: `Method ${method} not allowed` });
+    return NextResponse.json(comments, { status: 200 });
+  } catch (error: any) {
+    return NextResponse.json(
+      { message: `Error fetching comments: ${error.message}` },
+      { status: 500 }
+    );
   }
 }

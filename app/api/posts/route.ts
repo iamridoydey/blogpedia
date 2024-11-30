@@ -1,33 +1,29 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import PostModel from "@/models/post";
-import { NextApiRequest, NextApiResponse } from "next";
-import { getSession } from "next-auth/react";
+import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/authOptions";
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
-  const { method } = req;
-
-  if (method !== "POST") {
-    return res.status(405).json({ message: `Method ${method} not allowed` });
-  }
-
+export async function POST(req: NextRequest) {
   try {
-    const session = await getSession({ req });
+    // Get session from NextAuth
+    const session = await getServerSession(authOptions);
 
     if (!session || !session.user) {
-      return res.status(401).json({ message: "Unauthorized" });
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const { title, content, picture, tags } = req.body;
+    // Parse the request body as JSON
+    const { title, content, picture, tags } = await req.json();
 
     if (!title || !content) {
-      return res
-        .status(400)
-        .json({ message: "Title and content are required" });
+      return NextResponse.json(
+        { message: "Title and content are required" },
+        { status: 400 }
+      );
     }
 
-    // Create post
+    // Create a new post
     const post = new PostModel({
       title,
       content,
@@ -35,14 +31,18 @@ export default async function handler(
       editedAt: null,
       picture,
       tags,
-      userId: session.user._id, // Assuming `id` is available in session
+      userId: session.user.id, // Assuming `id` is available in session
     });
 
+    // Save the post to the database
     const newPost = await post.save();
-    return res.status(201).json(newPost);
+
+    // Return the created post
+    return NextResponse.json(newPost, { status: 201 });
   } catch (error: any) {
-    return res
-      .status(500)
-      .json({ message: `Error Creating Post: ${error.message}` });
+    return NextResponse.json(
+      { message: `Error Creating Post: ${error.message}` },
+      { status: 500 }
+    );
   }
 }

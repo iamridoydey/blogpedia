@@ -21,7 +21,7 @@ const userSchema = new Schema<User>({
   profilePic: {
     type: String,
     required: false,
-    default: null,
+    default: "",
   },
   occupation: {
     type: String,

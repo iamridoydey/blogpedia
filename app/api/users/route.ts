@@ -4,8 +4,7 @@ import dbConnect from "@/lib/db";
 import bcrypt from "bcryptjs";
 import { NextRequest, NextResponse } from "next/server";
 
-// Connect to the database
-dbConnect();
+
 
 // Handle POST request to create a new user
 export async function POST(req: NextRequest) {
@@ -20,6 +19,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
+    await dbConnect();
     // Check if the email is already taken
     const existingUser = await UserModel.findOne({ email });
     if (existingUser) {
@@ -62,6 +62,7 @@ export async function POST(req: NextRequest) {
 // Get all users
 export async function GET() {
   try {
+    dbConnect();
     const allUser = await UserModel.find({});
     return NextResponse.json(allUser, { status: 200 });
   } catch (error: any) {

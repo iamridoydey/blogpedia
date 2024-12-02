@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from "next/server";
 import CommentModel from "@/models/comment";
+import dbConnect from "@/lib/db";
 
 export async function PATCH(
   req: NextRequest,
@@ -18,6 +19,7 @@ export async function PATCH(
   }
 
   try {
+    await dbConnect();
     const updatedComment = await CommentModel.findByIdAndUpdate(
       id,
       { content },
@@ -46,6 +48,7 @@ export async function DELETE(
   const { id } = params;
 
   try {
+    await dbConnect();
     const deletedComment = await CommentModel.findByIdAndDelete(id);
 
     if (!deletedComment) {

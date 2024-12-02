@@ -6,9 +6,10 @@ import { NextRequest, NextResponse } from "next/server";
 dbConnect();
 
 export async function GET(req: NextRequest, { params }: any) {
-  const { id } = params;
+  const { id } = await params;
 
   try {
+    await dbConnect()
     const user = await UserModel.findById(id);
     if (!user) {
       return NextResponse.json({ message: "User not found" }, { status: 404 });
@@ -23,10 +24,11 @@ export async function GET(req: NextRequest, { params }: any) {
 }
 
 export async function PATCH(req: NextRequest, { params }: any) {
-  const { id } = params;
+  const { id } = await params;
   const body = await req.json();
 
   try {
+    await dbConnect()
     const updateQuery: any = {};
     const pushQuery: any = {};
 
@@ -83,6 +85,7 @@ export async function DELETE(req: NextRequest, { params }: any) {
   const { id } = params;
 
   try {
+    await dbConnect();
     // Delete the user by ID
     const deletedUser = await UserModel.findByIdAndDelete(id);
 

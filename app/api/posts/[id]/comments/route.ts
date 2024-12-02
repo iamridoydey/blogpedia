@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import CommentModel from "@/models/comment";
 import { Types } from "mongoose";
+import dbConnect from "@/lib/db";
 
 export async function GET(
   req: NextRequest,
@@ -17,6 +18,7 @@ export async function GET(
   }
 
   try {
+    await dbConnect();
     const comments = await CommentModel.find({
       postId: new Types.ObjectId(id),
     });

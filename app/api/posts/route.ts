@@ -3,6 +3,7 @@ import PostModel from "@/models/post";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
+import dbConnect from "@/lib/db";
 
 export async function POST(req: NextRequest) {
   try {
@@ -22,6 +23,8 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
+
+    await dbConnect()
 
     // Create a new post
     const post = new PostModel({

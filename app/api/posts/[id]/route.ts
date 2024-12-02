@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from "next/server";
 import PostModel from "@/models/post";
+import dbConnect from "@/lib/db";
 
 
 
@@ -17,6 +18,7 @@ export async function GET(req: NextRequest, {params}: any) {
 
   let post = null;
   try {
+    dbConnect()
     post = await PostModel.findById(id);
     if (!post) {
       return NextResponse.json({ message: "Post not found" }, { status: 404 });
@@ -45,6 +47,7 @@ export async function PATCH(req: NextRequest, {params}:any) {
 
   let post = null;
   try {
+    dbConnect();
     post = await PostModel.findById(id);
     if (!post) {
       return NextResponse.json({ message: "Post not found" }, { status: 404 });
@@ -72,6 +75,7 @@ export async function PATCH(req: NextRequest, {params}:any) {
       );
     }
 
+    dbConnect();
     const updatedPost = await PostModel.findByIdAndUpdate(
       id,
       {
@@ -102,6 +106,7 @@ export async function DELETE(req: NextRequest, {params}: any) {
   }
 
   try {
+    await dbConnect();
     const post = await PostModel.findById(id);
     if (!post) {
       return NextResponse.json({ message: "Post not found" }, { status: 404 });

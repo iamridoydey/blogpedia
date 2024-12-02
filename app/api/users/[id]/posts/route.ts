@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import dbConnect from "@/lib/db";
 import PostModel from "@/models/post";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -13,6 +14,7 @@ export async function GET(req: NextRequest, { params }: any) {
   }
 
   try {
+    await dbConnect();
     const posts = await PostModel.find({ userId: id });
 
     if (!posts.length) {

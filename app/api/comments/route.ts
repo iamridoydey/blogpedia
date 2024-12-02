@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import CommentModel from "@/models/comment";
 import { authOptions } from "@/lib/authOptions";
+import dbConnect from "@/lib/db";
 
 export async function POST(req: NextRequest) {
   try {
@@ -22,9 +23,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    await dbConnect();
     const newComment = new CommentModel({
       content,
-      commentBy: session.user.id, // Use appropriate ID field
+      commentBy: session.user.id,
       postId,
     });
 

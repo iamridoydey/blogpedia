@@ -1,25 +1,27 @@
 import mongoose from "mongoose";
 
-const MONGODB_URI =  process.env.MONGODB_URI || "";
+const MONGODB_URI = process.env.MONGODB_URI || "";
 
-if (!MONGODB_URI){
-  throw new Error("Please define the MONGODB_URI environment variable in your .env file.");
+if (!MONGODB_URI) {
+  throw new Error("Please define the MONGODB_URI environment variable.");
 }
 
-let cachedConnection: mongoose.Mongoose | null = null;
+const cached = global.mongoose || { conn: null, promise: null };
 
-async function dbConnect(){
-  if (cachedConnection){
-    return cachedConnection;
-  }
-
-  try{
-    cachedConnection = await mongoose.connect(MONGODB_URI);
-    return cachedConnection;
-  } catch (error){
-    throw error;
-  }
+if (process.env.NODE_ENV !== "production") {
+  global.mongoose = cached;
 }
 
+async function dbConnect() {
+  if (cached.conn) {
+    return cached.conn;
+  }
+
+  if (!cached.promise) {
+    cached.promise = mongoose.connect(MONGODB_URI).then((mongoose) => mongoose);
+  }
+  cached.conn = await cached.promise;
+  return cached.conn;
+}
 
 export default dbConnect;

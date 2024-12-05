@@ -6,7 +6,7 @@ import Link from "next/link";
 export default function NewUserMain() {
   return (
     <main className="main_wrapper">
-      <section className="hero_wrapper flex flex-col md:flex-row md:justify-between gap-8 mt-8 max-w-screen-lg m-auto px-4 overflow-hidden">
+      <section className="hero_wrapper flex flex-col sm:flex-row md:justify-between gap-8 mt-8 max-w-screen-lg m-auto px-4 overflow-hidden">
         <article className="greeting_section flex flex-col gap-4">
           <h1 className="md:w-[400px] text-4xl md:text-6xl font-bold text-gray-500">
             Welcome To Your Tech Blogger Community

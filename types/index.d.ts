@@ -8,8 +8,11 @@ export interface User {
   profilePic?: string;
   occupation: string;
   password: string;
+  isVerified: boolean;
   followers: Types.ObjectId[];
   following: Types.ObjectId[];
+  socialAccounts?: { platform: string; link: string }[];
+  authProvider: string;
 }
 
 export interface Post{

@@ -1,5 +1,10 @@
-import {Schema, Types, model} from "mongoose";
+import { Schema, Types, model } from "mongoose";
 import { User } from "@/types";
+
+const socialAccountSchema = new Schema({
+  platform: { type: String, required: true }, 
+  link: { type: String, required: true },     
+});
 
 const userSchema = new Schema<User>({
   firstname: {
@@ -9,14 +14,17 @@ const userSchema = new Schema<User>({
   lastname: {
     type: String,
     required: false,
+    default: "",
   },
   username: {
     type: String,
     required: true,
+    unique: true,
   },
   email: {
     type: String,
     required: true,
+    unique: true,
   },
   profilePic: {
     type: String,
@@ -25,29 +33,42 @@ const userSchema = new Schema<User>({
   },
   occupation: {
     type: String,
-    required: true,
+    required: false,
     default: "Developer",
   },
   password: {
     type: String,
-    required: true,
+    required: function () {
+      return this.authProvider == "credentials";
+    },
   },
   followers: [
     {
       type: Types.ObjectId,
       ref: "User",
-      default: []
+      default: [],
     },
   ],
   following: [
     {
       type: Types.ObjectId,
       ref: "User",
-      default: []
+      default: [],
     },
   ],
+  isVerified: {
+    type: Boolean,
+    default: false,
+    required: true,
+  },
+  socialAccounts: socialAccountSchema,
+  authProvider: {
+    type: String,
+    enum: ["local", "github", "linkedin", "google"],
+    required: true,
+    default: "local",
+  },
 });
-
 
 const UserModel = model<User>("User", userSchema);
 

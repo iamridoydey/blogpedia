@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    await dbConnect()
+    await dbConnect();
 
     // Create a new post
     const post = new PostModel({
@@ -33,8 +33,8 @@ export async function POST(req: NextRequest) {
       createdAt: Date.now(),
       editedAt: null,
       picture,
-      tags,
-      userId: session.user.id, // Assuming `id` is available in session
+      tags: Array.isArray(tags) ? tags : tags.split(" "),
+      userId: session.user.id,
     });
 
     // Save the post to the database

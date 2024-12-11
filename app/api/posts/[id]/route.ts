@@ -3,10 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 import PostModel from "@/models/post";
 import dbConnect from "@/lib/db";
 
-
-
 // GET method to fetch a post by its ID
-export async function GET(req: NextRequest, {params}: any) {
+export async function GET(req: NextRequest, { params }: any) {
   const { id } = params; // Extract the id from params
 
   if (!id) {
@@ -18,14 +16,14 @@ export async function GET(req: NextRequest, {params}: any) {
 
   let post = null;
   try {
-    dbConnect()
+    dbConnect();
     post = await PostModel.findById(id);
     if (!post) {
       return NextResponse.json({ message: "Post not found" }, { status: 404 });
     }
-  } catch (err: unknown) {
+  } catch (err: any) {
     return NextResponse.json(
-      { message: `Error fetching post: ${err}` },
+      { message: `Error fetching post: ${err.message}` },
       { status: 500 }
     );
   }
@@ -34,68 +32,74 @@ export async function GET(req: NextRequest, {params}: any) {
 }
 
 // PATCH method to update a post by its ID
-export async function PATCH(req: NextRequest, {params}:any) {
-  const { id } = params; // Extract the id from params
-  const body = await req.json();
-
-  if (!id || typeof id !== "string") {
-    return NextResponse.json(
-      { message: "Invalid or missing post ID" },
-      { status: 400 }
-    );
-  }
-
-  let post = null;
+export async function PATCH(req: NextRequest, { params }: any) {
   try {
-    dbConnect();
-    post = await PostModel.findById(id);
+    await dbConnect();
+    const { id } = params;
+    const body = await req.json();
+
+    const updateQuery: Record<string, any> = {};
+    const pushQuery: Record<string, any> = {};
+
+    // Check if post exists
+    const post = await PostModel.findById(id);
     if (!post) {
       return NextResponse.json({ message: "Post not found" }, { status: 404 });
     }
-  } catch (err: unknown) {
-    return NextResponse.json(
-      { message: `Error fetching post: ${err}` },
-      { status: 500 }
-    );
-  }
 
-  try {
-    const updateQuery: Record<string, any> = {};
-
-    for (const key in body) {
-      if (body[key] !== undefined) {
-        updateQuery[key] = body[key];
-      }
+    // Handle title
+    if (body.title) {
+      updateQuery.title = body.title;
     }
 
-    if (Object.keys(updateQuery).length === 0) {
+    // Handle content
+    if (body.content) {
+      updateQuery.content = body.content;
+    }
+
+    // Handle thumbnail
+    if (body.thumbnail) {
+      updateQuery.thumbnail = body.thumbnail;
+    }
+
+    // Handle tags
+    if (body.tags) {
+      updateQuery.tags = Array.isArray(body.tags)
+        ? body.tags
+        : body.tags.split(" ");
+    }
+
+    // Handle editedAt (to update when the post is edited)
+    updateQuery.editedAt = Date.now();
+
+    // Update the post in the database
+    const updatedPost = await PostModel.findByIdAndUpdate(
+      id,
+      { $set: updateQuery, ...pushQuery },
+      { new: true }
+    );
+
+    if (!updatedPost) {
       return NextResponse.json(
-        { message: "No fields to update" },
+        { message: "Post update failed" },
         { status: 400 }
       );
     }
 
-    dbConnect();
-    const updatedPost = await PostModel.findByIdAndUpdate(
-      id,
-      {
-        ...updateQuery,
-        editedAt: Date.now(),
-      },
-      { new: true }
-    );
-
-    return NextResponse.json(updatedPost, { status: 200 });
-  } catch (error: any) {
     return NextResponse.json(
-      { message: `Error updating post: ${error.message}` },
+      { message: "Post updated successfully", post: updatedPost },
+      { status: 200 }
+    );
+  } catch (err: any) {
+    return NextResponse.json(
+      { message: `Error updating post: ${err.message}` },
       { status: 500 }
     );
   }
 }
 
 // DELETE method to delete a post by its ID
-export async function DELETE(req: NextRequest, {params}: any) {
+export async function DELETE(req: NextRequest, { params }: any) {
   const { id } = params; // Extract the id from params
 
   if (!id || typeof id !== "string") {

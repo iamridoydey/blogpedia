@@ -1,11 +1,16 @@
 import { Schema, model } from "mongoose";
-import { Post } from "@/types";
+import { blogPost } from "@/types";
 
-const postSchema = new Schema<Post>(
+const blogPostSchema = new Schema<blogPost>(
   {
     title: {
       type: String,
       required: true,
+    },
+    thumbnail: {
+      type: String,
+      required: false,
+      default: "",
     },
     content: {
       type: String,
@@ -21,11 +26,6 @@ const postSchema = new Schema<Post>(
       required: false,
       default: null,
     },
-    picture: {
-      type: String,
-      required: false,
-      default: "",
-    },
     tags: {
       type: [String],
       required: true,
@@ -35,8 +35,14 @@ const postSchema = new Schema<Post>(
         type: Schema.Types.ObjectId,
         ref: "User",
         required: false,
+        default: []
       },
     ],
+    blogId: {
+      type: Schema.Types.ObjectId,
+      ref: "Blog",
+      required: true,
+    },
     userId: {
       type: Schema.Types.ObjectId,
       ref: "User",
@@ -46,6 +52,6 @@ const postSchema = new Schema<Post>(
   { timestamps: true }
 );
 
-const PostModel = model<Post>("Post", postSchema);
+const BlogPostModel = model<blogPost>("BlogPost", blogPostSchema);
 
-export default PostModel;
+export default BlogPostModel;

@@ -1,7 +1,7 @@
-import {Schema, model} from "mongoose"
-import {Comment} from "@/types"
+import { Schema, model } from "mongoose";
+import { blogComment } from "@/types";
 
-const commentSchema = new Schema<Comment>(
+const blogCommentSchema = new Schema<blogComment>(
   {
     content: {
       type: String,
@@ -14,16 +14,15 @@ const commentSchema = new Schema<Comment>(
         required: false,
       },
     ],
-    postId: {
+    blogPostId: {
       type: Schema.Types.ObjectId,
-      ref: "Post",
+      ref: "BlogPost",
       required: true,
     },
   },
   { timestamps: true }
 );
 
+const BlogCommentModel = model<blogComment>("BlogComment", blogCommentSchema);
 
-const CommentModel = model<Comment>("Comment", commentSchema);
-
-export default CommentModel;
+export default BlogCommentModel;

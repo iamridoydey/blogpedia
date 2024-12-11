@@ -6,6 +6,7 @@ const blogSchema = new Schema<blog>(
     domain: {
       type: String,
       required: true,
+      unique: true,
     },
     bloglogo: {
       type: String,

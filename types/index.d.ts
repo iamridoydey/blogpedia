@@ -23,13 +23,35 @@ export interface Post{
   editedAt: Date;
   picture?: string | null;
   tags: string[];
-  reactedBy: Types.ObjectId;
+  reactedBy: Types.ObjectId[];
   userId: Types.ObjectId;
 }
 
-
-export interface Comment{
+export interface Comment {
   content: string;
-  commentBy: Types.ObjectId;
+  commentedBy: Types.ObjectId;
   postId: Types.ObjectId;
+}
+
+export interface blog{
+  domain: string;
+  bloglogo: string;
+  blogCoverPic: string;
+  userId: Types.ObjectId;
+}
+
+export interface blogPost{
+  title: string;
+  thumbnail: string;
+  content: string;
+  tags: string[]
+  reactedBy: Types.ObjectId[];
+  blogId: Types.ObjectId;
+  userId: Types.ObjectId;
+}
+
+export interface blogComment{
+  content: string;
+  commentedBy: Types.ObjectId;
+  blogPostId: Types.ObjectId;
 }

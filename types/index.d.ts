@@ -58,3 +58,9 @@ export interface blogComment{
   commentedBy: Types.ObjectId;
   blogPostId: Types.ObjectId;
 }
+
+
+export interface Tag{
+  tag: string,
+  usage: number
+}

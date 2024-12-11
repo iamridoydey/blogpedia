@@ -16,16 +16,6 @@ const blogPostSchema = new Schema<BlogPost>(
       type: String,
       required: true,
     },
-    createdAt: {
-      type: Date,
-      required: true,
-      default: Date.now,
-    },
-    editedAt: {
-      type: Date,
-      required: false,
-      default: null,
-    },
     tags: {
       type: [String],
       required: true,

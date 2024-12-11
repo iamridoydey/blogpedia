@@ -11,16 +11,6 @@ const postSchema = new Schema<Post>(
       type: String,
       required: true,
     },
-    createdAt: {
-      type: Date,
-      required: true,
-      default: Date.now,
-    },
-    editedAt: {
-      type: Date,
-      required: false,
-      default: null,
-    },
     picture: {
       type: String,
       required: false,

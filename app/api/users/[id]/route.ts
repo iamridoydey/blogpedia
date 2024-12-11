@@ -32,6 +32,7 @@ export async function PATCH(req: NextRequest, { params }: any) {
     const updateQuery: any = {};
     const pushQuery: any = {};
 
+    // Handle email uniqueness
     if (body.email) {
       const isExistEmail = await UserModel.findOne({ email: body.email });
       if (isExistEmail && isExistEmail._id.toString() !== id) {
@@ -43,6 +44,7 @@ export async function PATCH(req: NextRequest, { params }: any) {
       updateQuery.email = body.email;
     }
 
+    // Handle username uniqueness
     if (body.username) {
       const isExistUsername = await UserModel.findOne({
         username: body.username,
@@ -56,16 +58,38 @@ export async function PATCH(req: NextRequest, { params }: any) {
       updateQuery.username = body.username;
     }
 
+    // Handle followers
     if (body.followers) {
       if (!pushQuery.$push) pushQuery.$push = {};
       pushQuery.$push.followers = body.followers;
     }
 
+    // Handle following
     if (body.following) {
       if (!pushQuery.$push) pushQuery.$push = {};
       pushQuery.$push.following = body.following;
     }
 
+    // Handle socialAccounts as an array
+    if (Array.isArray(body.socialAccounts)) {
+      const validAccounts = body.socialAccounts.filter(
+        (account: any) => account.platform && account.link
+      );
+      if (validAccounts.length !== body.socialAccounts.length) {
+        return NextResponse.json(
+          {
+            message:
+              "Invalid socialAccounts format. Each item must include platform and link.",
+          },
+          { status: 400 }
+        );
+      }
+
+      // Replace all socialAccounts
+      updateQuery.socialAccounts = validAccounts;
+    }
+
+    // Perform the update
     const updatedUser = await UserModel.findByIdAndUpdate(
       id,
       {
@@ -91,6 +115,7 @@ export async function PATCH(req: NextRequest, { params }: any) {
   }
 }
 
+
 export async function DELETE(req: NextRequest, { params }: any) {
   const { id } = await params;
 
@@ -106,7 +131,7 @@ export async function DELETE(req: NextRequest, { params }: any) {
 
     // Create a response to indicate the user was deleted
     const response = NextResponse.json(
-      { message: "successfully Deleteed The User" },
+      { message: "successfully Deleted The User" },
       { status: 200 }
     );
 

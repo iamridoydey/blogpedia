@@ -37,14 +37,17 @@ export interface blog{
   domain: string;
   bloglogo: string;
   blogCoverPic: string;
+  followedBy: Types.ObjectId[];
   userId: Types.ObjectId;
 }
 
-export interface blogPost{
+export interface blogPost {
   title: string;
   thumbnail: string;
   content: string;
-  tags: string[]
+  createdAt: Date;
+  editedAt: Date;
+  tags: string[];
   reactedBy: Types.ObjectId[];
   blogId: Types.ObjectId;
   userId: Types.ObjectId;

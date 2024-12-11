@@ -31,6 +31,11 @@ const userSchema = new Schema<User>({
     required: false,
     default: "",
   },
+  coverpic:{
+    type: String,
+    required: false,
+    default: ""
+  },
   occupation: {
     type: String,
     required: false,

@@ -29,6 +29,11 @@ const postSchema = new Schema<Post>({
     type: [String],
     required: true,
   },
+  reactedBy: {
+    type: Schema.Types.ObjectId,
+    ref: "User",
+    required: false
+  },
   userId: {
     type: Schema.Types.ObjectId,
     ref: "User", 

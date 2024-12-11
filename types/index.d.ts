@@ -19,8 +19,6 @@ export interface User {
 export interface Post{
   title: string;
   content: string;
-  createdAt: Date;
-  editedAt: Date;
   picture?: string | null;
   tags: string[];
   reactedBy: Types.ObjectId[];
@@ -45,8 +43,6 @@ export interface BlogPost {
   title: string;
   thumbnail: string;
   content: string;
-  createdAt: Date;
-  editedAt: Date;
   tags: string[];
   reactedBy: Types.ObjectId[];
   blogId: Types.ObjectId;

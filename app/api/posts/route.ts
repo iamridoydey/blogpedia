@@ -30,8 +30,6 @@ export async function POST(req: NextRequest) {
     const post = new PostModel({
       title,
       content,
-      createdAt: Date.now(),
-      editedAt: null,
       picture,
       tags: Array.isArray(tags) ? tags : tags.split(" "),
       userId: session.user.id,

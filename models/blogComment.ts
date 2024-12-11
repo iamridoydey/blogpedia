@@ -1,7 +1,7 @@
 import { Schema, model } from "mongoose";
-import { blogComment } from "@/types";
+import { BlogComment } from "@/types";
 
-const blogCommentSchema = new Schema<blogComment>(
+const blogCommentSchema = new Schema<BlogComment>(
   {
     content: {
       type: String,
@@ -23,6 +23,6 @@ const blogCommentSchema = new Schema<blogComment>(
   { timestamps: true }
 );
 
-const BlogCommentModel = model<blogComment>("BlogComment", blogCommentSchema);
+const BlogCommentModel = model<BlogComment>("BlogComment", blogCommentSchema);
 
 export default BlogCommentModel;

@@ -1,7 +1,7 @@
-import { blog } from "@/types";
+import { Blog } from "@/types";
 import { model, Schema } from "mongoose";
 
-const blogSchema = new Schema<blog>(
+const blogSchema = new Schema<Blog>(
   {
     domain: {
       type: String,
@@ -36,6 +36,6 @@ const blogSchema = new Schema<blog>(
 );
 
 
-const BlogModel = model<blog>("Blog", blogSchema);
+const BlogModel = model<Blog>("Blog", blogSchema);
 export default BlogModel;
 

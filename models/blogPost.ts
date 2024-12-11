@@ -1,7 +1,7 @@
 import { Schema, model } from "mongoose";
-import { blogPost } from "@/types";
+import { BlogPost } from "@/types";
 
-const blogPostSchema = new Schema<blogPost>(
+const blogPostSchema = new Schema<BlogPost>(
   {
     title: {
       type: String,
@@ -35,7 +35,7 @@ const blogPostSchema = new Schema<blogPost>(
         type: Schema.Types.ObjectId,
         ref: "User",
         required: false,
-        default: []
+        default: [],
       },
     ],
     blogId: {
@@ -52,6 +52,6 @@ const blogPostSchema = new Schema<blogPost>(
   { timestamps: true }
 );
 
-const BlogPostModel = model<blogPost>("BlogPost", blogPostSchema);
+const BlogPostModel = model<BlogPost>("BlogPost", blogPostSchema);
 
 export default BlogPostModel;

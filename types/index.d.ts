@@ -33,7 +33,7 @@ export interface Comment {
   postId: Types.ObjectId;
 }
 
-export interface blog{
+export interface Blog{
   domain: string;
   bloglogo: string;
   blogCoverPic: string;
@@ -41,7 +41,7 @@ export interface blog{
   userId: Types.ObjectId;
 }
 
-export interface blogPost {
+export interface BlogPost {
   title: string;
   thumbnail: string;
   content: string;
@@ -53,7 +53,7 @@ export interface blogPost {
   userId: Types.ObjectId;
 }
 
-export interface blogComment{
+export interface BlogComment{
   content: string;
   commentedBy: Types.ObjectId;
   blogPostId: Types.ObjectId;

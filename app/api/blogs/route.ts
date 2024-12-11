@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
     if (!isUserExist) {
       return NextResponse.json(
         { message: "User doesn't exist" },
-        { status: 400 }
+        { status: 404 }
       );
     }
 

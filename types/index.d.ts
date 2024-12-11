@@ -6,6 +6,7 @@ export interface User {
   email: string;
   username: string;
   profilePic?: string;
+  coverpic: string;
   occupation: string;
   password: string;
   isVerified: boolean;
@@ -22,6 +23,7 @@ export interface Post{
   editedAt: Date;
   picture?: string | null;
   tags: string[];
+  reactedBy: Types.ObjectId;
   userId: Types.ObjectId;
 }
 

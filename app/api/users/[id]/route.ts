@@ -9,7 +9,7 @@ export async function GET(req: NextRequest, { params }: any) {
   const { id } = await params;
 
   try {
-    await dbConnect()
+    await dbConnect();
     const user = await UserModel.findById(id);
     if (!user) {
       return NextResponse.json({ message: "User not found" }, { status: 404 });
@@ -28,7 +28,7 @@ export async function PATCH(req: NextRequest, { params }: any) {
   const body = await req.json();
 
   try {
-    await dbConnect()
+    await dbConnect();
     const updateQuery: any = {};
     const pushQuery: any = {};
 
@@ -41,6 +41,9 @@ export async function PATCH(req: NextRequest, { params }: any) {
             { status: 409 }
           );
         }
+
+        // Update email
+        updateQuery[key] = body[key];
       }
 
       if (key === "username") {
@@ -53,14 +56,15 @@ export async function PATCH(req: NextRequest, { params }: any) {
             { status: 409 }
           );
         }
+
+        // Replace username with previous one
+        updateQuery[key] = body[key];
       }
 
       if (["followers", "following"].includes(key)) {
         if (!pushQuery.$push) pushQuery.$push = {};
         pushQuery.$push[key] = body[key];
-      } else {
-        updateQuery[key] = body[key];
-      }
+      } 
     }
 
     const updatedUser = await UserModel.findByIdAndUpdate(
@@ -82,7 +86,7 @@ export async function PATCH(req: NextRequest, { params }: any) {
 }
 
 export async function DELETE(req: NextRequest, { params }: any) {
-  const { id } = params;
+  const { id } = await params;
 
   try {
     await dbConnect();
@@ -94,8 +98,23 @@ export async function DELETE(req: NextRequest, { params }: any) {
       return NextResponse.json({ message: "User not found" }, { status: 404 });
     }
 
-    // Return a 204 status for successful deletion without a response body
-    return NextResponse.json({ message: "Successfully Deleted The User"}, { status: 200 });
+    // Create a response to indicate the user was deleted
+    const response = NextResponse.json(
+      { message: "successfully Deleteed The User" },
+      { status: 200 }
+    );
+
+    // Clear the session cookie by setting it to an empty value and expired
+    response.headers.set(
+      "Set-Cookie",
+      "next-auth.session-token=; path=/; HttpOnly; Max-Age=0;"
+    );
+    response.headers.set(
+      "Set-Cookie",
+      `next-auth.csrf-token=; Path=/; HttpOnly; Max-Age=0`
+    );
+
+    return response;
   } catch (error: any) {
     // Catch any error and return a 500 status with an error message
     return NextResponse.json(
@@ -104,7 +123,6 @@ export async function DELETE(req: NextRequest, { params }: any) {
     );
   }
 }
-
 
 export async function OPTIONS() {
   return NextResponse.json({ message: "Method not allowed" }, { status: 405 });

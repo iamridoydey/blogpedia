@@ -13,6 +13,8 @@ export interface User {
   followers: Types.ObjectId[];
   following: Types.ObjectId[];
   socialAccounts?: { platform: string; link: string }[];
+  savePost: Types.ObjectId[];
+  saveBlogpost: Types.ObjectId[];
   authProvider: string;
 }
 

@@ -2,8 +2,8 @@ import { Schema, Types, model } from "mongoose";
 import { User } from "@/types";
 
 const socialAccountSchema = new Schema({
-  platform: { type: String, required: true }, 
-  link: { type: String, required: true },     
+  platform: { type: String, required: true },
+  link: { type: String, required: true },
 });
 
 const userSchema = new Schema<User>(
@@ -68,6 +68,20 @@ const userSchema = new Schema<User>(
       required: true,
     },
     socialAccounts: socialAccountSchema,
+    savePost: [
+      {
+        type: Types.ObjectId,
+        ref: "Post",
+        default: [],
+      },
+    ],
+    saveBlogpost: [
+      {
+        type: Types.ObjectId,
+        ref: "BlogPost",
+        default: [],
+      },
+    ],
     authProvider: {
       type: String,
       enum: ["local", "github", "linkedin", "google"],

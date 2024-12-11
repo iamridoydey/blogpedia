@@ -31,6 +31,7 @@ export async function PATCH(req: NextRequest, { params }: any) {
     await dbConnect();
     const updateQuery: any = {};
     const pushQuery: any = {};
+    const pullQuery: any = {};
 
     // Handle email uniqueness
     if (body.email) {
@@ -89,12 +90,46 @@ export async function PATCH(req: NextRequest, { params }: any) {
       updateQuery.socialAccounts = validAccounts;
     }
 
+    // Handle saving posts or blogposts
+    if (body.type && body.id && body.action) {
+      // Determine what kind of field I need to update
+      const queryField =
+        body.type === "post"
+          ? "savePost"
+          : body.type === "blogpost"
+          ? "saveBlogpost"
+          : null;
+      if (!queryField) {
+        return NextResponse.json(
+          { message: "Invalid type. Must be either 'post' or 'blogpost'." },
+          { status: 400 }
+        );
+      }
+
+      // Add id from array
+      if (body.action === "add") {
+        if (!pushQuery.$push) pushQuery.$push = {};
+        pushQuery.$push[queryField] = body.id;
+
+        // Remove id from array
+      } else if (body.action === "remove") {
+        if (!pullQuery.$pull) pullQuery.$pull = {};
+        pullQuery.$pull[queryField] = body.id;
+      } else {
+        return NextResponse.json(
+          { message: "Invalid action. Must be either 'add' or 'remove'." },
+          { status: 400 }
+        );
+      }
+    }
+
     // Perform the update
     const updatedUser = await UserModel.findByIdAndUpdate(
       id,
       {
         $set: updateQuery,
         ...pushQuery,
+        ...pullQuery,
       },
       { new: true }
     );
@@ -114,7 +149,6 @@ export async function PATCH(req: NextRequest, { params }: any) {
     );
   }
 }
-
 
 export async function DELETE(req: NextRequest, { params }: any) {
   const { id } = await params;

@@ -24,7 +24,7 @@ export async function GET(req: NextRequest, { params }: any) {
 }
 
 export async function PATCH(req: NextRequest, { params }: any) {
-  const { id } = await params;
+  const { id } = params;
   const body = await req.json();
 
   try {
@@ -32,49 +32,55 @@ export async function PATCH(req: NextRequest, { params }: any) {
     const updateQuery: any = {};
     const pushQuery: any = {};
 
-    for (const key in body) {
-      if (key === "email") {
-        const isExistEmail = await UserModel.findOne({ email: body[key] });
-        if (isExistEmail && isExistEmail._id.toString() !== id) {
-          return NextResponse.json(
-            { message: "Email already exists" },
-            { status: 409 }
-          );
-        }
-
-        // Update email
-        updateQuery[key] = body[key];
+    if (body.email) {
+      const isExistEmail = await UserModel.findOne({ email: body.email });
+      if (isExistEmail && isExistEmail._id.toString() !== id) {
+        return NextResponse.json(
+          { message: "Email already exists" },
+          { status: 409 }
+        );
       }
+      updateQuery.email = body.email;
+    }
 
-      if (key === "username") {
-        const isExistUsername = await UserModel.findOne({
-          username: body[key],
-        });
-        if (isExistUsername && isExistUsername._id.toString() !== id) {
-          return NextResponse.json(
-            { message: "Username already exists" },
-            { status: 409 }
-          );
-        }
-
-        // Replace username with previous one
-        updateQuery[key] = body[key];
+    if (body.username) {
+      const isExistUsername = await UserModel.findOne({
+        username: body.username,
+      });
+      if (isExistUsername && isExistUsername._id.toString() !== id) {
+        return NextResponse.json(
+          { message: "Username already exists" },
+          { status: 409 }
+        );
       }
+      updateQuery.username = body.username;
+    }
 
-      if (["followers", "following"].includes(key)) {
-        if (!pushQuery.$push) pushQuery.$push = {};
-        pushQuery.$push[key] = body[key];
-      } 
+    if (body.followers) {
+      if (!pushQuery.$push) pushQuery.$push = {};
+      pushQuery.$push.followers = body.followers;
+    }
+
+    if (body.following) {
+      if (!pushQuery.$push) pushQuery.$push = {};
+      pushQuery.$push.following = body.following;
     }
 
     const updatedUser = await UserModel.findByIdAndUpdate(
       id,
       {
-        ...updateQuery,
+        $set: updateQuery,
         ...pushQuery,
       },
       { new: true }
     );
+
+    if (!updatedUser) {
+      return NextResponse.json(
+        { message: "User not found or update failed" },
+        { status: 404 }
+      );
+    }
 
     return NextResponse.json(updatedUser, { status: 200 });
   } catch (error: any) {

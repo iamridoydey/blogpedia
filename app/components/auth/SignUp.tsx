@@ -58,7 +58,7 @@ export default function SignUp() {
         setPassword("");
         setIsSubmitting(false);
 
-        router.push(`/dashboard`);
+        router.push(`/auth/signin`);
       } else {
         setSubmissionError(true);
         setIsSubmitting(false);

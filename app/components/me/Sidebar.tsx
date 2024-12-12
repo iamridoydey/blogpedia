@@ -13,8 +13,6 @@ const Sidebar: React.FC = () => {
   // Split the pathname by '/' and get the last portion
   const lastSegment = pathname.split('/').filter(Boolean).pop();
   const [activeItem, setActiveItem] = useState(lastSegment);
-  if (pathname) {
-  }
   const menuItems = [
     { id: "basicinfo", icon: <RiUserSettingsFill />, label: "Basic Info" },
     { id: "security", icon: <GrShieldSecurity />, label: "Security" },

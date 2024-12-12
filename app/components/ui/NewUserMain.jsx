@@ -6,7 +6,7 @@ import Link from "next/link";
 export default function NewUserMain() {
   return (
     <main className="main_wrapper">
-      <section className="hero_wrapper flex flex-col sm:flex-row md:justify-between gap-8 mt-8 max-w-screen-lg m-auto px-4 overflow-hidden">
+      <section className="hero_wrapper flex flex-col sm:flex-row md:justify-between gap-8 mt-8 max-w-screen-xl m-auto px-4 overflow-hidden">
         <article className="greeting_section flex flex-col gap-4">
           <h1 className="md:w-[400px] text-4xl md:text-6xl font-bold text-gray-500">
             Welcome To Your Tech Blogger Community
@@ -41,7 +41,7 @@ export default function NewUserMain() {
       </section>
 
       <section className="blog_writing_wrapper py-16 bg-stone-300 mt-6">
-        <article className="blog_main max-w-screen-lg m-auto px-4">
+        <article className="blog_main max-w-screen-xl m-auto px-4">
           <h1 className="text-3xl font-bold text-gray-500">
             Wanna write blog based on your tech skills that can reach to
             millions of people?
@@ -83,7 +83,7 @@ export default function NewUserMain() {
         </article>
       </section>
       <section className="meet_people_wrapper py-8 mt-6">
-        <article className="meet_people_main max-w-screen-lg m-auto px-4">
+        <article className="meet_people_main max-w-screen-xl m-auto px-4">
           <h1 className="meet_people_title text-3xl font-bold text-gray-500">
             Get in touch with skillful person from where you can learn?
           </h1>

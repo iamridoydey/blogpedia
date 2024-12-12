@@ -5,7 +5,6 @@ import blogpedia_less_width from "@/public/blogpedia_fav.svg";
 import { MdArticle } from "react-icons/md";
 import { IoPeopleSharp, IoHome, IoSave } from "react-icons/io5";
 import SearchBar from "./SearchBar";
-import MobileNavbar from "./MobileNavbar";
 import NavProfile from "./NavProfile";
 
 export default function AuthNavbar() {
@@ -100,10 +99,6 @@ export default function AuthNavbar() {
           </div>
         </div>
       </nav>
-
-      {/* Mobile nav  */}
-
-      <MobileNavbar />
     </section>
   );
 }

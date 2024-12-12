@@ -1,11 +1,19 @@
+"use client"
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { IoHome, IoPeopleSharp, IoSave } from "react-icons/io5";
 import { MdArticle } from "react-icons/md";
 
 export default function MobileNavbar() {
-  return (
-    <nav className="mobile_nav block slg:hidden">
-      <ul className="absolute bottom-0 z-[10] flex items-center justify-around bg-white py-2 w-full">
+  const pathname = usePathname();
+  const isAllowMobileNav =
+    pathname.startsWith("/me") ||
+    pathname.startsWith("/blog") ||
+    pathname === "/";
+
+  return !isAllowMobileNav ? (
+    <nav className="mobile_nav  block slg:hidden">
+      <ul className="absolute bottom-0 flex items-center justify-around bg-white py-2 w-full">
         <li className="">
           <Link
             href="/feed"
@@ -53,5 +61,7 @@ export default function MobileNavbar() {
         </li>
       </ul>
     </nav>
+  ) : (
+    ""
   );
 }

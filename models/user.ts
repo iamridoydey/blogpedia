@@ -48,6 +48,10 @@ const userSchema = new Schema<User>(
         return this.authProvider == "credentials";
       },
     },
+    hasBlog: {
+      type: Boolean,
+      default: false
+    },
     followers: [
       {
         type: Types.ObjectId,

@@ -3,8 +3,8 @@ import dbConnect from "@/lib/db";
 import BlogModel from "@/models/blog";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET({ params }: { params: { id: string } }) {
-  const { id } = params;
+export async function GET(context:any) {
+  const { id } = context.params;
 
   try {
     await dbConnect();

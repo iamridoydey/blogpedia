@@ -67,7 +67,10 @@ const userSchema = new Schema<User>(
       default: false,
       required: true,
     },
-    socialAccounts: socialAccountSchema,
+    socialAccounts: {
+      type: [socialAccountSchema],
+      default: [],
+    },
     savePost: [
       {
         type: Types.ObjectId,

@@ -1,15 +1,19 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import dbConnect from "@/lib/db";
 import UserModel from "@/models/user";
+import bcrypt from "bcryptjs";
 import { NextRequest, NextResponse } from "next/server";
 
+// Connect to the database
 dbConnect();
 
-export async function GET(req: NextRequest, { params }: any) {
+export async function GET(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
   const { id } = await params;
 
   try {
-    await dbConnect();
     const user = await UserModel.findById(id);
     if (!user) {
       return NextResponse.json({ message: "User not found" }, { status: 404 });
@@ -23,12 +27,14 @@ export async function GET(req: NextRequest, { params }: any) {
   }
 }
 
-export async function PATCH(req: NextRequest, { params }: any) {
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
   const { id } = params;
   const body = await req.json();
 
   try {
-    await dbConnect();
     const updateQuery: any = {};
     const pushQuery: any = {};
     const pullQuery: any = {};
@@ -59,6 +65,22 @@ export async function PATCH(req: NextRequest, { params }: any) {
       updateQuery.username = body.username;
     }
 
+    // Handle other fields
+    if (body.firstname) updateQuery.firstname = body.firstname;
+    if (body.lastname) updateQuery.lastname = body.lastname;
+    if (body.profilePic) updateQuery.profilePic = body.profilePic;
+    if (body.coverpic) updateQuery.coverpic = body.coverpic;
+    if (body.occupation) updateQuery.occupation = body.occupation;
+    if (body.password) {
+      // Hash the password
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(body.password, salt);
+      updateQuery.password = hashedPassword;
+    }
+    if (typeof body.isVerified !== "undefined")
+      updateQuery.isVerified = body.isVerified;
+    if (body.authProvider) updateQuery.authProvider = body.authProvider;
+
     // Handle followers
     if (body.followers) {
       if (!pushQuery.$push) pushQuery.$push = {};
@@ -74,7 +96,8 @@ export async function PATCH(req: NextRequest, { params }: any) {
     // Handle socialAccounts as an array
     if (Array.isArray(body.socialAccounts)) {
       const validAccounts = body.socialAccounts.filter(
-        (account: any) => account.platform && account.link
+        (account: { platform: string; link: string }) =>
+          account.platform && account.link
       );
       if (validAccounts.length !== body.socialAccounts.length) {
         return NextResponse.json(
@@ -85,14 +108,11 @@ export async function PATCH(req: NextRequest, { params }: any) {
           { status: 400 }
         );
       }
-
-      // Replace all socialAccounts
       updateQuery.socialAccounts = validAccounts;
     }
 
     // Handle saving posts or blogposts
     if (body.type && body.id && body.action) {
-      // Determine what kind of field I need to update
       const queryField =
         body.type === "post"
           ? "savePost"
@@ -106,12 +126,9 @@ export async function PATCH(req: NextRequest, { params }: any) {
         );
       }
 
-      // Add id from array
       if (body.action === "add") {
         if (!pushQuery.$push) pushQuery.$push = {};
         pushQuery.$push[queryField] = body.id;
-
-        // Remove id from array
       } else if (body.action === "remove") {
         if (!pullQuery.$pull) pullQuery.$pull = {};
         pullQuery.$pull[queryField] = body.id;
@@ -123,7 +140,6 @@ export async function PATCH(req: NextRequest, { params }: any) {
       }
     }
 
-    // Perform the update
     const updatedUser = await UserModel.findByIdAndUpdate(
       id,
       {
@@ -150,26 +166,25 @@ export async function PATCH(req: NextRequest, { params }: any) {
   }
 }
 
-export async function DELETE(req: NextRequest, { params }: any) {
-  const { id } = await params;
+
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  const { id } = params;
 
   try {
-    await dbConnect();
-    // Delete the user by ID
     const deletedUser = await UserModel.findByIdAndDelete(id);
 
-    // If no user is found and deleted, return a 404 status
     if (!deletedUser) {
       return NextResponse.json({ message: "User not found" }, { status: 404 });
     }
 
-    // Create a response to indicate the user was deleted
     const response = NextResponse.json(
-      { message: "successfully Deleted The User" },
+      { message: "Successfully deleted the user" },
       { status: 200 }
     );
 
-    // Clear the session cookie by setting it to an empty value and expired
     response.headers.set(
       "Set-Cookie",
       "next-auth.session-token=; path=/; HttpOnly; Max-Age=0;"
@@ -181,7 +196,6 @@ export async function DELETE(req: NextRequest, { params }: any) {
 
     return response;
   } catch (error: any) {
-    // Catch any error and return a 500 status with an error message
     return NextResponse.json(
       { message: `Error deleting user: ${error.message}` },
       { status: 500 }

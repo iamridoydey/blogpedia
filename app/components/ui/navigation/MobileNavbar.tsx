@@ -12,8 +12,8 @@ export default function MobileNavbar() {
     pathname === "/";
 
   return !isAllowMobileNav ? (
-    <nav className="mobile_nav  block slg:hidden">
-      <ul className="absolute bottom-0 flex items-center justify-around bg-white py-2 w-full">
+    <nav className="mobile_nav block slg:hidden">
+      <ul className="flex fixed bottom-0 items-center justify-around bg-white py-2 w-full  border-t-[2px] border-gray-400">
         <li className="">
           <Link
             href="/feed"

@@ -1,4 +1,12 @@
+"use client";
+import Footer from "./components/ui/Footer";
+import NewUserMain from "./components/ui/NewUserMain";
 
 export default function Home() {
-  return <h3 className="bg-red-200">Hello Blogpedia</h3>
+  return (
+    <>
+      <NewUserMain />
+      <Footer />
+    </>
+  );
 }

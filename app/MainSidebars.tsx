@@ -18,21 +18,20 @@ export default function MainSideBars({
     pathname === "/" ||
     pathname.startsWith("/auth");
 
-  return (
+  return !hideSidebars ? (
     <main className="app_wrapper p-4">
       <div className="grid grid-cols-1 md:grid-cols-[2fr_5fr_2fr] gap-4 w-full">
-        {/* left sidebars = miniprofile, tags */}
-        {!hideSidebars && (
-          <div className="left_sidebars flex flex-col gap-4">
-            <div className="sticky">
-              <ProfileBlock />
-            </div>
-            <div className="sticky">
-              <TagsBlock numberOfTags={10} />
-            </div>
+        {/* Left sidebars: Profile, Tags */}
+        <div className="left_sidebars flex flex-col gap-4">
+          <div className="sticky">
+            <ProfileBlock />
           </div>
-        )}
+          <div className="sticky">
+            <TagsBlock numberOfTags={10} />
+          </div>
+        </div>
 
+        {/* Main content */}
         <div className="main_content">
           <div className="create_post">
             <CreatePostMain />
@@ -40,18 +39,18 @@ export default function MainSideBars({
           <div className="infinite_contents">{children}</div>
         </div>
 
-        {/* right sidebars = users, blogs */}
-        {!hideSidebars && (
-          <div className="right_sidebars flex flex-col gap-4">
-            <div className="sticky">
-              <UsersBlock limitUsers={2} />
-            </div>
-            <div className="sticky">
-              <BlogsBlock limitBlogs={2} />
-            </div>
+        {/* Right sidebars: Users, Blogs */}
+        <div className="right_sidebars flex flex-col gap-4">
+          <div className="sticky">
+            <UsersBlock limitUsers={2} />
           </div>
-        )}
+          <div className="sticky">
+            <BlogsBlock limitBlogs={2} />
+          </div>
+        </div>
       </div>
     </main>
+  ) : (
+    <div className="main_content">{children}</div>
   );
 }

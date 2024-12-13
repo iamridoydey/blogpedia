@@ -7,6 +7,7 @@ import { userValidation } from "@/validation/signupValidation";
 import { z } from "zod";
 import { extractNameFromEmail } from "@/helperFunction/extractNameFromEmail";
 import { generateUsername } from "@/helperFunction/generateUsername";
+import { PipelineStage } from "mongoose";
 
 export async function POST(req: NextRequest) {
   try {
@@ -82,15 +83,60 @@ export async function POST(req: NextRequest) {
   }
 }
 
-export async function GET() {
+
+export async function GET(req: any) {
   try {
     await dbConnect();
-    const allUsers = await UserModel.find({});
-    return NextResponse.json(allUsers, { status: 200 });
+
+    // Get the limit from query parameters
+    const url = new URL(req.url);
+    const limitParam = url.searchParams.get('limit');
+    const limit = parseInt(limitParam ?? '0', 10);
+
+    // Assume the current user's ID is provided in the query parameter for simplicity
+    const currentUserId = url.searchParams.get('currentUserId');
+
+    if (!currentUserId) {
+      return NextResponse.json({ message: "Current user ID not provided" }, { status: 400 });
+    }
+
+    // Fetch the current user to get the list of users they are following
+    const currentUser = await UserModel.findById(currentUserId).lean();
+
+    if (!currentUser) {
+      return NextResponse.json({ message: "Current user not found" }, { status: 404 });
+    }
+
+    const followingIds = currentUser.following;
+
+    // Build aggregation pipeline
+    const pipeline: PipelineStage[] = [
+      { $match: { _id: { $nin: [...followingIds, currentUserId] } } } as PipelineStage, 
+      { $sort: { usage: -1 } } as PipelineStage,
+    ];
+
+    // Add limit stage if limit is provided and greater than 0
+    if (limit > 0) {
+      pipeline.push({ $limit: limit } as PipelineStage);
+    }
+
+    console.log("Aggregation Pipeline: ", pipeline); 
+
+    const users = await UserModel.aggregate(pipeline);
+
+    if (!users.length) {
+      return NextResponse.json({ message: "No users found" }, { status: 404 });
+    }
+
+    return NextResponse.json(users, { status: 200 });
   } catch (error: any) {
+    console.error("Error fetching users: ", error); 
     return NextResponse.json(
-      { message: `Error Getting Users: ${error.message}` },
+      { message: `Error fetching users: ${error.message}` },
       { status: 500 }
     );
   }
 }
+
+
+

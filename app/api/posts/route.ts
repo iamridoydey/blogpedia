@@ -47,3 +47,15 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+
+export async function GET() {
+  try {
+    const blogPosts = await PostModel.find({});
+    return NextResponse.json(blogPosts, { status: 200 });
+  } catch (err: any) {
+    return NextResponse.json(
+      { message: `Error finding posts: ${err.message}` },
+      { status: 500 }
+    );
+  }
+}

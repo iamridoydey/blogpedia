@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import PostModel from "@/models/post";
 import dbConnect from "@/lib/db";
+import TagModel from "@/models/tags";
 
 // GET method to fetch a post by its ID
 export async function GET(req: NextRequest, { params }: any) {
@@ -39,7 +40,6 @@ export async function PATCH(req: NextRequest, { params }: any) {
     const body = await req.json();
 
     const updateQuery: Record<string, any> = {};
-    const pushQuery: Record<string, any> = {};
 
     // Check if post exists
     const post = await PostModel.findById(id);
@@ -64,9 +64,25 @@ export async function PATCH(req: NextRequest, { params }: any) {
 
     // Handle tags
     if (body.tags) {
-      updateQuery.tags = Array.isArray(body.tags)
+      const newTags = Array.isArray(body.tags)
         ? body.tags
         : body.tags.split(" ");
+      const oldTags = post.tags;
+
+      // Increment usage for new tags
+      const tagsToAdd = newTags.filter((tag: string) => !oldTags.includes(tag));
+      const tagsToRemove = oldTags.filter((tag) => !newTags.includes(tag));
+
+      for (const tag of tagsToAdd) {
+        await TagModel.incrementUsage(tag);
+      }
+
+      // Decrement usage for removed tags
+      for (const tag of tagsToRemove) {
+        await TagModel.decrementUsage(tag);
+      }
+
+      updateQuery.tags = newTags;
     }
 
     // Handle editedAt (to update when the post is edited)
@@ -75,7 +91,7 @@ export async function PATCH(req: NextRequest, { params }: any) {
     // Update the post in the database
     const updatedPost = await PostModel.findByIdAndUpdate(
       id,
-      { $set: updateQuery, ...pushQuery },
+      { $set: updateQuery },
       { new: true }
     );
 
@@ -112,11 +128,19 @@ export async function DELETE(req: NextRequest, { params }: any) {
   try {
     await dbConnect();
     const post = await PostModel.findById(id);
+
     if (!post) {
       return NextResponse.json({ message: "Post not found" }, { status: 404 });
     }
 
+    // Decrement usage for all tags associated with the post
+    for (const tag of post.tags) {
+      await TagModel.decrementUsage(tag);
+    }
+
+    // Delete the post
     await PostModel.findByIdAndDelete(id);
+
     return NextResponse.json(
       { message: "Successfully deleted the post" },
       { status: 204 }

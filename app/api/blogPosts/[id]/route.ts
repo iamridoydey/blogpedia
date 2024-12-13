@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import dbConnect from "@/lib/db";
 import BlogPostModel from "@/models/blogPost";
+import TagModel from "@/models/tags";
 import { NextRequest, NextResponse } from "next/server";
 
 // GET: Retrieve a single blog post
@@ -31,7 +32,7 @@ export async function GET(
   }
 }
 
-/// PATCH method to update a post by its ID
+// PATCH: Update a blog post
 export async function PATCH(
   req: NextRequest,
   { params }: { params: { id: string } }
@@ -42,7 +43,6 @@ export async function PATCH(
     const body = await req.json();
 
     const updateQuery: Record<string, any> = {};
-    const pushQuery: Record<string, any> = {};
 
     // Handle title
     if (body.title) {
@@ -59,31 +59,46 @@ export async function PATCH(
       updateQuery.thumbnail = body.thumbnail;
     }
 
-    // Handle tags (optional)
-    if (body.tags) {
-      updateQuery.tags = Array.isArray(body.tags)
-        ? body.tags
-        : body.tags.split(" ");
-    }
+    // Normalize tags
+    const newTags = Array.isArray(body.tags)
+      ? body.tags.map((tag: string) => tag.trim().toLowerCase())
+      : body.tags?.split(" ").map((tag: string) => tag.trim().toLowerCase());
 
-    // Handle editedAt (to update when the post is edited)
-    updateQuery.editedAt = Date.now();
-
-    // Check if the blog post exists
+    // Find the existing post to manage tag usage
     const post = await BlogPostModel.findById(id);
     if (!post) {
-      return NextResponse.json(
-        { message: "Post not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ message: "Post not found" }, { status: 404 });
     }
 
-    // Update the post in the database
-    const updatedPost = await BlogPostModel.findByIdAndUpdate(
-      id,
-      { $set: updateQuery, ...pushQuery },
-      { new: true }
-    );
+    // Update tags if provided
+    if (newTags) {
+      const oldTags = post.tags;
+
+      // Decrement usage for removed tags
+      const removedTags = oldTags.filter((tag) => !newTags.includes(tag));
+      for (const tag of removedTags) {
+        await TagModel.decrementUsage(tag);
+      }
+
+      // Increment usage for new tags
+      const addedTags = newTags.filter((tag: string) => !oldTags.includes(tag));
+      for (const tag of addedTags) {
+        const existingTag = await TagModel.findOne({ name: tag });
+        if (existingTag) {
+          await TagModel.incrementUsage(tag);
+        } else {
+          await TagModel.create({ name: tag, usageCount: 1 });
+        }
+      }
+
+      updateQuery.tags = newTags;
+    }
+
+    // Update the blog post
+    updateQuery.editedAt = Date.now();
+    const updatedPost = await BlogPostModel.findByIdAndUpdate(id, updateQuery, {
+      new: true,
+    });
 
     if (!updatedPost) {
       return NextResponse.json(
@@ -104,8 +119,7 @@ export async function PATCH(
   }
 }
 
-
-// DELETE: Delete a single blog post
+// DELETE: Delete a blog post
 export async function DELETE(
   req: NextRequest,
   { params }: { params: { id: string } }
@@ -115,6 +129,21 @@ export async function DELETE(
 
     const { id } = params;
 
+    // Find the post to get its tags
+    const post = await BlogPostModel.findById(id);
+    if (!post) {
+      return NextResponse.json(
+        { message: "Blog post not found" },
+        { status: 404 }
+      );
+    }
+
+    // Decrement usage for all tags associated with the post
+    for (const tag of post.tags) {
+      await TagModel.decrementUsage(tag);
+    }
+
+    // Delete the blog post
     const deletedBlogPost = await BlogPostModel.findByIdAndDelete(id);
 
     if (!deletedBlogPost) {

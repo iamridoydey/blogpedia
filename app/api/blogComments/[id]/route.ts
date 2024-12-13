@@ -3,14 +3,10 @@ import dbConnect from "@/lib/db";
 import BlogCommentModel from "@/models/blogComment";
 import { NextRequest, NextResponse } from "next/server";
 
-interface Params {
-  id: string;
-}
-
-export async function PATCH(req: NextRequest, { params }: { params: Params }) {
+export async function PATCH(req: NextRequest, context: any) {
   try {
     await dbConnect();
-    const { id } = params;
+    const { id } = context.params;
     const { content } = await req.json();
 
     // Validate the content

@@ -3,10 +3,11 @@ import dbConnect from "@/lib/db";
 import BlogCommentModel from "@/models/blogComment";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function PATCH(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+interface Params {
+  id: string;
+}
+
+export async function PATCH(req: NextRequest, { params }: { params: Params }) {
   try {
     await dbConnect();
     const { id } = params;

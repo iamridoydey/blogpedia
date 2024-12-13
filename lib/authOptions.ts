@@ -1,9 +1,12 @@
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import GitHubProvider from "next-auth/providers/github";
+import LinkedInProvider from "next-auth/providers/linkedin";
 import UserModel from "@/models/user";
 import bcrypt from "bcryptjs";
 import dbConnect from "./db";
-import { Types } from "mongoose";
+import { generateUsername } from "@/helperFunction/generateUsername";
+import { generateFirstLastName } from "@/helperFunction/generateFirstLastName";
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -13,18 +16,16 @@ export const authOptions: NextAuthOptions = {
         email: {
           label: "Email",
           type: "email",
-          placeholder: "example@example.com",
         },
         password: { label: "Password", type: "password" },
       },
       async authorize(
         credentials: { email: string; password: string } | undefined
       ) {
-
         if (!credentials?.email || !credentials?.password) {
           return null;
         }
-
+        console.log("credentials ", credentials);
         try {
           await dbConnect();
 
@@ -38,19 +39,14 @@ export const authOptions: NextAuthOptions = {
             user.password
           );
 
+          console.log("Is password valid: ", isPasswordValid);
+
           if (isPasswordValid) {
             const userData = {
               id: user._id.toString(),
-              firstname: user.firstname,
-              lastname: user.lastname,
-              username: user.username,
-              email: user.email,
-              profilepic: user.profilePic || "",
-              occupation: user.occupation,
-              followers: user.followers,
-              following: user.following,
             };
 
+            console.log(userData);
             return userData;
           } else {
             return null;
@@ -61,61 +57,146 @@ export const authOptions: NextAuthOptions = {
         }
       },
     }),
+    // Github provider
+    GitHubProvider({
+      clientId: process.env.GITHUB_ID!,
+      clientSecret: process.env.GITHUB_SECRET!,
+      authorization: { params: { prompt: "login" } },
+    }),
+    LinkedInProvider({
+      clientId: process.env.LINKEDIN_CLIENT_ID!,
+      clientSecret: process.env.LINKEDIN_CLIENT_SECRET!,
+      authorization: { params: { scope: "r_emailaddress" } },
+    }),
   ],
   pages: {
     signIn: "/auth/signin",
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async signIn({ account, profile }) {
+      // Connect db first
+      await dbConnect();
 
-      if (user) {
-        // Store custom user data in the JWT token
-        token.id = user.id;
-        token.firstname = user.firstname;
-        token.lastname = user.lastname;
-        token.username = user.username;
-        token.profilepic = user.profilepic;
-        token.occupation = user.occupation;
-        token.followers = user.followers;
-        token.following = user.following;
+      // Don't need to include credential provider because this data already being stored in the
+      // database
+
+      // Oauth providers data should be saved to the database
+      if (account?.provider === "github") {
+        const githubProfile = profile as {
+          name: string;
+          login: string;
+          email: string;
+          avatar_url: string;
+        };
+
+        // Check if user exists
+        let existingUser = await UserModel.findOne({
+          email: githubProfile.email,
+        });
+        if (!existingUser) {
+          const [firstname, lastname] = generateFirstLastName(
+            githubProfile.name
+          );
+          existingUser = await UserModel.create({
+            firstname,
+            lastname,
+            username: githubProfile.login,
+            email: githubProfile.email,
+            profilePic: githubProfile.avatar_url,
+            authProvider: "github",
+            isVerified: true,
+          });
+        }
+      } else if (account?.provider === "linkedin") {
+        const linkedinProfile = profile as {
+          localizedFirstname: string;
+          localizedLastName: string;
+          email: string;
+          profilePicture: {
+            "displayImage~": {
+              elements: Array<{
+                identifiers: Array<{ identifier: string }>;
+              }>;
+            };
+          };
+        };
+
+        // Check if user exists
+        let existingUser = await UserModel.findOne({
+          email: linkedinProfile.email,
+        });
+        if (!existingUser) {
+          const profilePic =
+            linkedinProfile.profilePicture?.["displayImage~"]?.elements?.[0]
+              ?.identifiers?.[0]?.identifier || "";
+
+          existingUser = await UserModel.create({
+            firstname: linkedinProfile.localizedFirstname,
+            lastname: linkedinProfile.localizedLastName,
+            username: generateUsername(linkedinProfile.localizedFirstname),
+            email: linkedinProfile.email,
+            profilePic,
+            authProvider: "linkedin",
+            isVerified: true,
+          });
+        }
       }
+
+      // Continue to the next step
+      return true;
+    },
+    async jwt({ token, account, profile }) {
+      console.log("Before Adding to token : ", token);
+      console.log("jwt account ", account);
+      console.log("jwt profile ", profile);
+      if (account && profile) {
+        const oAuthProfile = profile as {
+          id: string;
+          email: string;
+        };
+
+        console.log("Profile ", profile);
+
+        const user = await UserModel.findOne({ email: oAuthProfile.email });
+
+        if (user) {
+          token.id = user._id.toString();
+        }
+      } else if (account && !profile) {
+        const id = account.providerAccountId;
+
+        const user = await UserModel.findById(id);
+
+        if (user) {
+          token.id = id;
+        }
+      }
+
+      console.log("After adding to token ", token);
 
       return token;
     },
+
     async session({ session, token }) {
+      console.log("token: ", token);
+      if (typeof token?.id == "string") {
+        // Store only userId in session
+        session.user.id = token.id;
+      }
 
-      // Type assertion for session.user
-      const user = token as {
-        id: string;
-        firstname: string;
-        lastname: string;
-        username: string;
-        profilepic: string;
-        occupation: string;
-        followers: Types.ObjectId[];
-        following: Types.ObjectId[];
-      };
+      // Remove all unwanted data
+      delete session?.user?.name;
+      delete session?.user?.email;
+      delete session?.user?.image;
 
-      // Transfer the token data to the session
-      session.user.id = user.id;
-      session.user.firstname = user.firstname;
-      session.user.lastname = user.lastname;
-      session.user.username = user.username;
-      session.user.profilepic = user.profilepic;
-      session.user.occupation = user.occupation;
-      session.user.followers = user.followers;
-      session.user.following = user.following;
-
-      // Don't set name, email, and image in the session which is set by default
-      delete session.user.name;
-      delete session.user.email;
-      delete session.user.image;
-
+      console.log("Session user id : ", session?.user);
       return session;
     },
   },
   session: {
-    strategy: "jwt", // Use JWT-based sessions
+    strategy: "jwt",
+    // Maxium validation of the session is one day
+    maxAge: 24 * 60 * 60,
   },
   secret: process.env.NEXTAUTH_SECRET,
 };

@@ -62,6 +62,13 @@ const userSchema = new Schema<User>(
         default: [],
       },
     ],
+    followingBlogs: [
+      {
+        type: Types.ObjectId,
+        ref: "Blog",
+        default: [],
+      },
+    ],
     isVerified: {
       type: Boolean,
       default: false,

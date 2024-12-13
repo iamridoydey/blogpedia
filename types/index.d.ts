@@ -12,6 +12,7 @@ export interface User {
   isVerified: boolean;
   followers: Types.ObjectId[];
   following: Types.ObjectId[];
+  followingBlogs: Types.ObjectId[];
   socialAccounts?: { platform: string; link: string }[];
   savePost: Types.ObjectId[];
   saveBlogpost: Types.ObjectId[];

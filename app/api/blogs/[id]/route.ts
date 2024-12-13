@@ -35,11 +35,11 @@ export async function GET({ params }: { params: { id: string } }) {
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context:any
 ) {
   try {
     await dbConnect();
-    const { id } = params;
+    const { id } = context.params;
     const body = await req.json();
 
     const updateQuery: any = {};
@@ -108,8 +108,8 @@ export async function PATCH(
 }
 
 
-export async function DELETE(req: NextRequest, { params }: any) {
-  const { id } = await params;
+export async function DELETE(req: NextRequest, context: any) {
+  const { id } = await context.params;
 
   try {
     await dbConnect();

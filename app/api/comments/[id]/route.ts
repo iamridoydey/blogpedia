@@ -5,9 +5,9 @@ import dbConnect from "@/lib/db";
 
 export async function PATCH(
   req: NextRequest,
-  params: any 
+  context: any 
 ) {
-  const { id } = params;
+  const { id } = context.params;
   const body = await req.json();
   const { content } = body;
 
@@ -43,9 +43,9 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  params:any
+  context:any
 ) {
-  const { id } = params;
+  const { id } = context.params;
 
   try {
     await dbConnect();

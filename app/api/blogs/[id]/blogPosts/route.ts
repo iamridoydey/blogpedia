@@ -6,9 +6,9 @@ import { NextRequest, NextResponse } from "next/server";
 // Adding correct types for params
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+ context:any
 ) {
-  const { id } = params;
+  const { id } = context.params;
 
   // Validate the 'id' parameter
   if (!id || typeof id !== "string") {

@@ -7,12 +7,12 @@ import { NextRequest, NextResponse } from "next/server";
 // GET: Retrieve a single blog post
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: any 
 ) {
   try {
     await dbConnect();
 
-    const { id } = params;
+    const { id } = context.params;
 
     const blogPost = await BlogPostModel.findById(id);
 
@@ -35,11 +35,11 @@ export async function GET(
 // PATCH: Update a blog post
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context:any
 ) {
   try {
     await dbConnect();
-    const { id } = params;
+    const { id } = context.params;
     const body = await req.json();
 
     const updateQuery: Record<string, any> = {};
@@ -122,12 +122,12 @@ export async function PATCH(
 // DELETE: Delete a blog post
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context:any
 ) {
   try {
     await dbConnect();
 
-    const { id } = params;
+    const { id } = context.params;
 
     // Find the post to get its tags
     const post = await BlogPostModel.findById(id);

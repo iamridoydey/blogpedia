@@ -3,8 +3,8 @@ import dbConnect from "@/lib/db";
 import PostModel from "@/models/post";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(req: NextRequest, { params }: any) {
-  const { id } = params;
+export async function GET(req: NextRequest, context: any) {
+  const { id } = context.params;
 
   if (!id || typeof id !== "string") {
     return NextResponse.json(

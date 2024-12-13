@@ -9,9 +9,9 @@ dbConnect();
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context:any 
 ) {
-  const { id } = await params;
+  const { id } = await context.params;
 
   try {
     const user = await UserModel.findById(id);
@@ -29,9 +29,9 @@ export async function GET(
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context:any
 ) {
-  const { id } = params;
+  const { id } = context.params;
   const body = await req.json();
 
   try {
@@ -192,9 +192,9 @@ export async function PATCH(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context:any
 ) {
-  const { id } = params;
+  const { id } = context.params;
 
   try {
     const deletedUser = await UserModel.findByIdAndDelete(id);

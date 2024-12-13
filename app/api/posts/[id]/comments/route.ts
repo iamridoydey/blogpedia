@@ -6,9 +6,9 @@ import dbConnect from "@/lib/db";
 
 export async function GET(
   req: NextRequest,
-  {params}: any
+  context: any
 ) {
-  const { id } = params;
+  const { id } = context.params;
 
   if (!id || !Types.ObjectId.isValid(id)) {
     return NextResponse.json(

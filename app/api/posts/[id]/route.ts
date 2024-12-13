@@ -5,8 +5,8 @@ import dbConnect from "@/lib/db";
 import TagModel from "@/models/tags";
 
 // GET method to fetch a post by its ID
-export async function GET(req: NextRequest, { params }: any) {
-  const { id } = params; // Extract the id from params
+export async function GET(req: NextRequest, context: any) {
+  const { id } = context.params;
 
   if (!id) {
     return NextResponse.json(
@@ -33,10 +33,10 @@ export async function GET(req: NextRequest, { params }: any) {
 }
 
 // PATCH method to update a post by its ID
-export async function PATCH(req: NextRequest, { params }: any) {
+export async function PATCH(req: NextRequest, context:any) {
   try {
     await dbConnect();
-    const { id } = params;
+    const { id } = context.params;
     const body = await req.json();
 
     const updateQuery: Record<string, any> = {};
@@ -115,8 +115,8 @@ export async function PATCH(req: NextRequest, { params }: any) {
 }
 
 // DELETE method to delete a post by its ID
-export async function DELETE(req: NextRequest, { params }: any) {
-  const { id } = params; // Extract the id from params
+export async function DELETE(req: NextRequest, context: any) {
+  const { id } = context.params;
 
   if (!id || typeof id !== "string") {
     return NextResponse.json(

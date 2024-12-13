@@ -71,6 +71,7 @@ export async function PATCH(
     if (body.profilePic) updateQuery.profilePic = body.profilePic;
     if (body.coverpic) updateQuery.coverpic = body.coverpic;
     if (body.occupation) updateQuery.occupation = body.occupation;
+    if (body.hasBlog) updateQuery.hasBlog = body.hasBlog;
     if (body.password) {
       // Hash the password
       const salt = await bcrypt.genSalt(10);
@@ -81,16 +82,37 @@ export async function PATCH(
       updateQuery.isVerified = body.isVerified;
     if (body.authProvider) updateQuery.authProvider = body.authProvider;
 
+    // Handle followingBlogs
+    if (body.followingBlogs) {
+      if (body.followingBlogs.add) {
+        if (!pushQuery.$push) pushQuery.$push = {};
+        pushQuery.$push.followingBlogs = body.followingBlogs.add;
+      } else if (body.followingBlogs.remove) {
+        if (!pullQuery.$pull) pullQuery.$pull = {};
+        pullQuery.$pull.followingBlogs = body.followingBlogs.remove;
+      }
+    }
+
     // Handle followers
     if (body.followers) {
-      if (!pushQuery.$push) pushQuery.$push = {};
-      pushQuery.$push.followers = body.followers;
+      if (body.followers.add) {
+        if (!pushQuery.$push) pushQuery.$push = {};
+        pushQuery.$push.followers = body.followers.add;
+      } else if (body.followers.remove) {
+        if (!pullQuery.$pull) pullQuery.$pull = {};
+        pullQuery.$pull.followers = body.followers.remove;
+      }
     }
 
     // Handle following
     if (body.following) {
-      if (!pushQuery.$push) pushQuery.$push = {};
-      pushQuery.$push.following = body.following;
+      if (body.following.add) {
+        if (!pushQuery.$push) pushQuery.$push = {};
+        pushQuery.$push.following = body.following.add;
+      } else if (body.following.remove) {
+        if (!pullQuery.$pull) pullQuery.$pull = {};
+        pullQuery.$pull.following = body.following.remove;
+      }
     }
 
     // Handle socialAccounts as an array
@@ -165,6 +187,7 @@ export async function PATCH(
     );
   }
 }
+
 
 
 export async function DELETE(

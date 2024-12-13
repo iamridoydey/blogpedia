@@ -10,6 +10,7 @@ export interface User {
   occupation: string;
   password: string;
   isVerified: boolean;
+  hasBlog: boolean;
   followers: Types.ObjectId[];
   following: Types.ObjectId[];
   followingBlogs: Types.ObjectId[];

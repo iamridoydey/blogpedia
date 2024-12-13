@@ -1,13 +1,19 @@
-import { Tag } from "@/types";
-import { model, Schema } from "mongoose";
+import { model, Schema, Model } from "mongoose";
+import { Tag } from "@/types"; // Assuming you have a Tag interface defined
 
-//Tag schema
-const tagSchema = new Schema<Tag>({
+// Extend the Model interface to include static methods
+interface TagModel extends Model<Tag> {
+  incrementUsage(tagName: string): Promise<Tag | null>;
+  decrementUsage(tagName: string): Promise<Tag | null>;
+}
+
+// Define the Tag schema
+const tagSchema = new Schema<Tag, TagModel>({
   tag: {
     type: String,
     required: true,
     unique: true,
-    lowercase: true, 
+    lowercase: true,
   },
   usage: {
     type: Number,
@@ -16,27 +22,23 @@ const tagSchema = new Schema<Tag>({
   },
 });
 
-// Atomic update for incrementing the usage count when a tag is used
-tagSchema.statics.incrementUsage = async function(tagName: string) {
+// Implement the static methods
+tagSchema.statics.incrementUsage = async function (tagName: string) {
   const tag = await this.findOneAndUpdate(
     { tag: tagName.toLowerCase() },
-    // Increment usage by 1
     { $inc: { usage: 1 } },
     { new: true, upsert: true }
   );
   return tag;
 };
 
-// Atomic update for decrementing the usage count when a tag is removed
-tagSchema.statics.decrementUsage = async function(tagName: string) {
+tagSchema.statics.decrementUsage = async function (tagName: string) {
   const tag = await this.findOneAndUpdate(
     { tag: tagName.toLowerCase() },
-    // Decrement usage by 1
     { $inc: { usage: -1 } },
     { new: true }
   );
 
-  // If usage drops below 0, we reset it to 0 to avoid negative values
   if (tag && tag.usage < 0) {
     tag.usage = 0;
     await tag.save();
@@ -45,6 +47,7 @@ tagSchema.statics.decrementUsage = async function(tagName: string) {
   return tag;
 };
 
-const TagModel = model<Tag>("Tag", tagSchema);
+// Create the model with the extended interface
+const TagModel = model<Tag, TagModel>("Tag", tagSchema);
 
 export default TagModel;

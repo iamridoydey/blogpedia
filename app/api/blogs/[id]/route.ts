@@ -44,6 +44,7 @@ export async function PATCH(
 
     const updateQuery: any = {};
     const pushQuery: any = {};
+    const pullQuery: any = {};
 
     // Handle domain
     if (body.domain) {
@@ -68,13 +69,22 @@ export async function PATCH(
 
     // Handle followedBy
     if (body.followedBy) {
-      if (!pushQuery.$push) pushQuery.$push = {};
-      pushQuery.$push.followedBy = body.followedBy;
+      if (body.followedBy.add) {
+        if (!pushQuery.$push) pushQuery.$push = {};
+        pushQuery.$push.followedBy = body.followedBy.add;
+      } else if (body.followedBy.remove) {
+        if (!pullQuery.$pull) pullQuery.$pull = {};
+        pullQuery.$pull.followedBy = body.followedBy.remove;
+      }
     }
 
     const updatedBlog = await BlogModel.findByIdAndUpdate(
       id,
-      { $set: updateQuery, ...pushQuery },
+      {
+        $set: updateQuery,
+        ...pushQuery,
+        ...pullQuery,
+      },
       { new: true }
     );
 
@@ -96,6 +106,7 @@ export async function PATCH(
     );
   }
 }
+
 
 export async function DELETE(req: NextRequest, { params }: any) {
   const { id } = await params;

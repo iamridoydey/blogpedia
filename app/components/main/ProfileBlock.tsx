@@ -50,6 +50,7 @@ export default function ProfileBlock() {
               alt="profile pic"
               width={100}
               height={100}
+              className="rounded-full"
             />
           ) : (
             <DefaultPic shortname={shortname} />

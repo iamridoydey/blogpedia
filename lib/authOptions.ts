@@ -25,7 +25,6 @@ export const authOptions: NextAuthOptions = {
         if (!credentials?.email || !credentials?.password) {
           return null;
         }
-        console.log("credentials ", credentials);
         try {
           await dbConnect();
 
@@ -39,7 +38,6 @@ export const authOptions: NextAuthOptions = {
             user.password
           );
 
-          console.log("Is password valid: ", isPasswordValid);
 
           if (isPasswordValid) {
             const userData = {
@@ -155,8 +153,6 @@ export const authOptions: NextAuthOptions = {
           email: string;
         };
 
-        console.log("Profile ", profile);
-
         const user = await UserModel.findOne({ email: oAuthProfile.email });
 
         if (user) {
@@ -172,7 +168,6 @@ export const authOptions: NextAuthOptions = {
         }
       }
 
-      console.log("After adding to token ", token);
 
       return token;
     },
@@ -189,7 +184,6 @@ export const authOptions: NextAuthOptions = {
       delete session?.user?.email;
       delete session?.user?.image;
 
-      console.log("Session user id : ", session?.user);
       return session;
     },
   },

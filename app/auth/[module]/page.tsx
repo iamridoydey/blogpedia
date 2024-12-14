@@ -1,11 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import SignIn from "@/app/components/auth/SignIn";
 import SignUp from "@/app/components/auth/SignUp";
 
-interface Params {
-  module: string;
-}
-
-export default function AuthPage({ params }: { params: Params }) {
+export default function AuthPage({ params }: { params: any }) {
   const { module } = params;
 
   return (

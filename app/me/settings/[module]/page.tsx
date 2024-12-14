@@ -1,13 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import BasicInfo from "@/app/components/me/settings/BasicInfo";
 import DeleteAccount from "@/app/components/me/settings/DeleteAccount";
 import Security from "@/app/components/me/settings/Security";
 import SocialAccounts from "@/app/components/me/settings/SocialAccounts";
 
-export default function SettingsModule({
-  params,
-}: {
-  params: { module: string };
-}) {
+export default function SettingsModule({ params }: { params: any }) {
   const { module } = params;
 
   let content;
@@ -21,10 +18,10 @@ export default function SettingsModule({
       content = <Security />;
       break;
     case "socialAccounts":
-      content = <SocialAccounts/>;
+      content = <SocialAccounts />;
       break;
     case "deleteAccount":
-      content = <DeleteAccount/>;
+      content = <DeleteAccount />;
       break;
     default:
       content = <div>Default Module Content</div>;

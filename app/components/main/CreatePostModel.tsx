@@ -1,16 +1,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useSession } from "next-auth/react";
-import {
-  Editor,
-  EditorState,
-  convertToRaw,
-  Modifier,
-} from "draft-js";
+import { Editor, EditorState, convertToRaw, Modifier } from "draft-js";
 import { LiaTimesSolid } from "react-icons/lia";
 import Picker from "@emoji-mart/react";
 import "draft-js/dist/Draft.css";
 import { CiFaceSmile } from "react-icons/ci";
+import DefaultPic from "../ui/DefaultPic";
+import Image from "next/image";
+import { user } from "@/app/dummydata/user";
+import { SlPicture } from "react-icons/sl";
 
 interface Post {
   content: string;
@@ -29,6 +28,7 @@ interface User {
   firstname: string;
   lastname: string;
   profilePic: string;
+  username: string;
 }
 
 export default function CreatePostModal({
@@ -36,12 +36,15 @@ export default function CreatePostModal({
   onClose,
 }: CreatePostModalProps) {
   const { data: session } = useSession();
-  const [userDetails, setUserDetails] = useState<User | null>(null);
+  const [userDetails, setUserDetails] = useState<User>(user);
   const [editorState, setEditorState] = useState(() =>
     EditorState.createEmpty()
   );
   const [tags, setTags] = useState<string[]>([]);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const emojiPickerRef = useRef<HTMLDivElement>(null);
+  const { firstname, lastname, profilePic, username } = userDetails;
+  const shortname: string = firstname[0] + (lastname ? lastname[0] : "");
 
   // Get user data
   useEffect(() => {
@@ -61,6 +64,23 @@ export default function CreatePostModal({
 
     userData();
   }, [session?.user.id]);
+
+  // Handle click outside the emoji picker
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        emojiPickerRef.current &&
+        !emojiPickerRef.current.contains(event.target as Node)
+      ) {
+        setShowEmojiPicker(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [emojiPickerRef]);
 
   const handlePostSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -129,31 +149,60 @@ export default function CreatePostModal({
           <LiaTimesSolid />
         </button>
         <hr className="w-full my-4" />
-        <section className="main_content">
-          <div className="text_content">
+        <section className="user_details flex gap-1 items-center text-xl mb-2">
+          <figure className="w-12 h-12 rounded-full bg-white overflow-hidden">
+            {profilePic ? (
+              <Image
+                src={profilePic}
+                className="w-full h-full rounded"
+                width={100}
+                height={100}
+                alt="profile pic"
+              />
+            ) : (
+              <DefaultPic shortname={shortname} />
+            )}
+          </figure>
+          <h3 className="">{`${firstname} ${lastname}` || username}</h3>
+        </section>
+        <section className="main_content relative">
+          {/* Emoji Picker */}
+          {showEmojiPicker && (
+            <div
+              className="emoji_picker absolute top-0 right-0 z-20 max-w-full max-h-80 overflow-y-auto"
+              ref={emojiPickerRef}
+            >
+              <Picker
+                data-emoji-mart
+                onEmojiSelect={addEmoji}
+                className="emoji-picker-responsive"
+              />
+            </div>
+          )}
+          <div className="text_content text-gray-700 mr-8 mb-4">
             <Editor
               editorState={editorState}
               onChange={setEditorState}
               placeholder={`What's on your mind ${userDetails?.firstname}?`}
             />
           </div>
+          <div className="emoji">
+            <button
+              type="button"
+              className="ml-0 p-1 text-slate-800 rounded-full hover:bg-gray-200 text-2xl absolute right-0 top-0 z-10"
+              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+            >
+              <CiFaceSmile />
+            </button>
+          </div>
         </section>
 
-        {showEmojiPicker && (
-          <Picker
-            data-emoji-mart
-            onEmojiSelect={addEmoji}
-            className={`w-[300px]`}
-          />
-        )}
-        <button
-          type="button"
-          className="ml-0 p-1 text-slate-800 rounded-full hover:bg-gray-200 text-2xl"
-          onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-        >
-          <CiFaceSmile />
-        </button>
-        <div className="flex justify-end">
+        <section className="addons"></section>
+
+        <div className="flex justify-between items-center">
+          <button className="thumbnail w-6 h-6 text-blue-500">
+            <SlPicture  className="w-full h-full"/>
+          </button>
           <button
             type="submit"
             className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"

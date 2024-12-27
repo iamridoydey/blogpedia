@@ -43,3 +43,20 @@ body {
   transform: translateZ(0);
 }
 
+/* Emoji picker css */
+.emoji_picker {
+  max-width: 100%;
+  max-height: 300px;
+  overflow-y: auto;
+  overflow-x: auto;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: #fff;
+}
+
+.emoji-picker-responsive {
+  width: 100%;
+  max-width: 300px;
+  margin: 0 auto;
+}
+

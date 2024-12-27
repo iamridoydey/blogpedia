@@ -1,9 +1,18 @@
-import React, { useState } from "react";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import React, { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import Image from "next/image";
+import {
+  Editor,
+  EditorState,
+  convertToRaw,
+  Modifier,
+} from "draft-js";
+import { LiaTimesSolid } from "react-icons/lia";
+import Picker from "@emoji-mart/react";
+import "draft-js/dist/Draft.css";
+import { CiFaceSmile } from "react-icons/ci";
 
 interface Post {
-  title: string;
   content: string;
   picture?: string;
   tags: string[];
@@ -16,26 +25,42 @@ interface CreatePostModalProps {
   onClose: () => void;
 }
 
+interface User {
+  firstname: string;
+  lastname: string;
+  profilePic: string;
+}
+
 export default function CreatePostModal({
   uploadedPhotoURL,
-  uploading,
   onClose,
 }: CreatePostModalProps) {
   const { data: session } = useSession();
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
+  const [userDetails, setUserDetails] = useState<User | null>(null);
+  const [editorState, setEditorState] = useState(() =>
+    EditorState.createEmpty()
+  );
   const [tags, setTags] = useState<string[]>([]);
-  const [inputTag, setInputTag] = useState("");
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
-  const handleTagChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    if (value.includes(" ")) {
-      setTags([...tags, value.trim()]);
-      setInputTag("");
-    } else {
-      setInputTag(value);
-    }
-  };
+  // Get user data
+  useEffect(() => {
+    const userData = async () => {
+      if (session?.user.id) {
+        try {
+          const response = await fetch(`/api/users/${session.user.id}`);
+          if (response.ok) {
+            const data = await response.json();
+            setUserDetails(data);
+          }
+        } catch (error: any) {
+          console.log("Error getting user ", error.message);
+        }
+      }
+    };
+
+    userData();
+  }, [session?.user.id]);
 
   const handlePostSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,9 +69,11 @@ export default function CreatePostModal({
       return;
     }
 
+    const contentState = editorState.getCurrentContent();
+    const rawContent = JSON.stringify(convertToRaw(contentState));
+
     const newPost: Post = {
-      title,
-      content,
+      content: rawContent,
       picture: uploadedPhotoURL || "",
       tags,
       userId: session.user.id,
@@ -66,95 +93,75 @@ export default function CreatePostModal({
       }
 
       onClose();
-      setTitle("");
-      setContent("");
+      setEditorState(EditorState.createEmpty());
       setTags([]);
-      setInputTag("");
     } catch (error) {
       console.error("Error creating post:", error);
       alert("An error occurred while creating the post. Please try again.");
     }
   };
 
+  const addEmoji = (emoji: any) => {
+    const contentState = editorState.getCurrentContent();
+    const selectionState = editorState.getSelection();
+    const contentStateWithEmoji = Modifier.insertText(
+      contentState,
+      selectionState,
+      emoji.native
+    );
+    const newEditorState = EditorState.push(
+      editorState,
+      contentStateWithEmoji,
+      "insert-characters"
+    );
+    setEditorState(newEditorState);
+  };
+
   return (
     <div className="create-post-modal fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center z-50">
-      <div className="bg-white p-4 rounded shadow-lg w-full max-w-xl mx-4">
-        <h2 className="text-2xl font-bold mb-4">Create Post</h2>
-        <form onSubmit={handlePostSubmit}>
-          <div className="mb-4">
-            <label htmlFor="title" className="block text-gray-700">
-              Title
-            </label>
-            <input
-              type="text"
-              id="title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="w-full px-4 py-2 mt-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600"
-              required
+      <div className="bg-white p-4 rounded shadow-lg w-full max-w-xl mx-4 relative">
+        <h2 className="text-2xl font-bold mb-2 ">Create Post</h2>
+        <button
+          type="button"
+          className="p-2 bg-slate-300 text-gray-700 font-bold rounded-full hover:bg-gray-400 text-xl absolute right-4 top-4"
+          onClick={onClose}
+        >
+          <LiaTimesSolid />
+        </button>
+        <hr className="w-full my-4" />
+        <section className="main_content">
+          <div className="text_content">
+            <Editor
+              editorState={editorState}
+              onChange={setEditorState}
+              placeholder={`What's on your mind ${userDetails?.firstname}?`}
             />
           </div>
-          <div className="mb-4">
-            <label htmlFor="content" className="block text-gray-700">
-              Content
-            </label>
-            <textarea
-              id="content"
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              className="w-full px-4 py-2 mt-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600"
-              rows={5}
-              required
-            />
-          </div>
-          {uploading && <p>Uploading image, please wait...</p>}
-          {uploadedPhotoURL && !uploading && (
-            <div className="mb-4">
-              <Image
-                src={uploadedPhotoURL}
-                alt="Uploaded"
-                className="w-full h-auto rounded-md"
-              />
-            </div>
-          )}
-          <div className="mb-4">
-            <label htmlFor="tags" className="block text-gray-700">
-              Tags (use # to separate tags)
-            </label>
-            <input
-              type="text"
-              id="tags"
-              value={inputTag}
-              onChange={handleTagChange}
-              className="w-full px-4 py-2 mt-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600"
-            />
-            <div className="mt-2">
-              {tags.map((tag, index) => (
-                <span
-                  key={index}
-                  className="inline-block bg-blue-100 text-blue-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded mb-2"
-                >
-                  #{tag}
-                </span>
-              ))}
-            </div>
-          </div>
-          <div className="flex justify-end">
-            <button
-              type="button"
-              className="px-4 py-2 mr-2 bg-gray-400 text-white rounded-md hover:bg-gray-500"
-              onClick={onClose}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-            >
-              Create Post
-            </button>
-          </div>
-        </form>
+        </section>
+
+        {showEmojiPicker && (
+          <Picker
+            data-emoji-mart
+            onEmojiSelect={addEmoji}
+            className={`w-[300px]`}
+          />
+        )}
+        <button
+          type="button"
+          className="ml-0 p-1 text-slate-800 rounded-full hover:bg-gray-200 text-2xl"
+          onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+        >
+          <CiFaceSmile />
+        </button>
+        <div className="flex justify-end">
+          <button
+            type="submit"
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            onClick={handlePostSubmit}
+          >
+            Create Post
+          </button>
+        </div>
       </div>
     </div>
   );
